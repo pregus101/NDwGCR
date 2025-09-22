@@ -11,6 +11,7 @@ from platformdirs import user_music_dir
 from tkinter import ttk
 import tkinter as tk
 from tkinter import scrolledtext
+import yt_dlp
 
 #Sets default output path
 output_path = user_music_dir()
@@ -70,10 +71,32 @@ class Downloader():
             })
         return video
 
-    #Downloads the music if it can't it will skip it
+    #Downloads the music if it can't it will skip it This will also get the meta data for the file
     def download(self, path, url):
         yt = YouTube(url)
 
+        #Tries to get meta data. Returns meta data if it can't
+        ydl_opts = {
+            'quiet': True,  # Don't print anything to console
+            'skip_download': True, # We only want the info, not the download
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                info_dict = ydl.extract_info(url, download=False)
+                artist = info_dict.get('artist')
+                track = info_dict.get('track') # For song title
+
+                if artist:
+                    print(f"Artist: {artist}")
+                if track:
+                    print(f"Track: {track}")
+                if not artist and not track:
+                    print("Music metadata (artist/track) not found in this video.")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
+        #tries to download the music. Returns error if you it can't
         try:
             stream = yt.streams.filter(only_audio=True).first()
             convertin = stream.download(path) # Optional: specify download path
@@ -123,8 +146,7 @@ screen.title("New spotify downloader")
 screen.geometry("540x740")
 
 #Ensuring text stays centered
-screen.grid_columnconfigure(0, weight=1) 
- 
+screen.grid_columnconfigure(0, weight=1)  
 
 #Making the background black
 screen.configure(bg="black")

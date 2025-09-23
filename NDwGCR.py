@@ -31,11 +31,25 @@ output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-class CSVLoader():
+class OnlineMusicEntry():
+    def __init__(self):
+        pass
+        
+    @staticmethod
+    def createFromYoutubeID(self, url) -> OnlineMusicEntry:
+        pass
+
+class ListOfMusic():
     def __init__(self):
         pass
 
     def appendFromSmartURL(self):
+        pass
+
+    def smartloadFromCSV(self, path):
+        pass
+
+    def downloadAll(self) -> bool:
         pass
 
 

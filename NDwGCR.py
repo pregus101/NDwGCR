@@ -31,6 +31,13 @@ output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+class CSVLoader():
+    def __init__(self):
+        pass
+
+    def appendFromSmartURL(self):
+        pass
+
 
 class Downloader():
     def __init__(self):

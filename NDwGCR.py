@@ -12,6 +12,9 @@ from tkinter import ttk
 import tkinter as tk
 from tkinter import scrolledtext
 import yt_dlp
+from mutagen.mp3 import MP3
+from mutagen.easyid3 import EasyID3
+from mutagen.mp4 import MP4, MP4Tags
 
 #Sets default output path
 output_path = user_music_dir()
@@ -19,6 +22,9 @@ output_path = user_music_dir()
 class Downloader():
 
     def __init__(self):
+        #updates screen
+        screen.update_idletasks()
+        screen.after(25)
 
         #Gets project path
         self.appPath = os.path.dirname(os.path.abspath(__file__))
@@ -52,12 +58,16 @@ class Downloader():
                 output_and_scroll(out_data)
 
                 #Gets the download url then downloads and converts it.
-                download_url = self.search(song[1]+' '+song[3])
-                for element in download_url:
-                    self.download(output_path, element['url'])
+                self.download_and_meta_url = self.search(song[1]+' '+song[3])
+                for element in self.download_and_meta_url:
+                    self.download(output_path, element['url'], song[3], song[2], song[4], song[10])
 
                 #updates loading bar
                 progress_bar['value']+=1
+
+                #updates screen
+                screen.update_idletasks()
+                screen.after(25)
 
     #Finds the url based off of the song name and artist
     def search(self, term):
@@ -71,30 +81,9 @@ class Downloader():
             })
         return video
 
-    #Downloads the music if it can't it will skip it This will also get the meta data for the file
-    def download(self, path, url):
+    #Downloads the music if it can't it will skip it This will also apply the meta data to the file
+    def download(self, path, url, artist, album, date, genre):
         yt = YouTube(url)
-
-        #Tries to get meta data. Returns meta data if it can't
-        ydl_opts = {
-            'quiet': True,  # Don't print anything to console
-            'skip_download': True, # We only want the info, not the download
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            try:
-                info_dict = ydl.extract_info(url, download=False)
-                artist = info_dict.get('artist')
-                track = info_dict.get('track') # For song title
-
-                if artist:
-                    print(f"Artist: {artist}")
-                if track:
-                    print(f"Track: {track}")
-                if not artist and not track:
-                    print("Music metadata (artist/track) not found in this video.")
-            except Exception as e:
-                print(f"An error occurred: {e}")
 
         #tries to download the music. Returns error if you it can't
         try:
@@ -103,9 +92,11 @@ class Downloader():
             convertout = convertin[:-3]+'mp3'
             self.convert_m4a_mp3(convertin, convertout)
 
+            #attempts to apply metadata
+            self.apply_metadata(convertout, artist, album, date, genre)
+
         except:
             output_and_scroll( "Error, content can't be downloaded")
-
 
     #Converts the .m4a to .mp3
     def convert_m4a_mp3(self, file, path):
@@ -121,7 +112,7 @@ class Downloader():
                     '-q:a', '0',
                     path
                 ]
-            
+                    
                 subprocess.run(command, check=True, capture_output=True, text=True)
                 output_and_scroll(f"Successfully converted '{file}' to '{path}'\n")
             except subprocess.CalledProcessError as e:
@@ -134,8 +125,28 @@ class Downloader():
             output_and_scroll('File already exists skipping.\n')
 
         os.remove(file)
-        screen.update_idletasks()
-        screen.after(25)
+
+    #applies the meta data
+    def apply_metadata(self, path, artist, album, date, genre):
+        try:
+            # Load the MP3 file with EasyID3
+            audio = MP3(path, ID3=EasyID3)
+
+            # Print current title (if exists)
+            print(f"Original Title: {audio.get('title', ['N/A'])[0]}")
+
+            # Modifies tags
+            audio['artist'] = [artist]
+            audio['album'] = [album]
+            audio['date'] = [date]
+            audio['genre'] = [genre] 
+
+            # Save the changes
+            audio.save()
+            print("Metadata updated successfully!")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 
 # defining the screen

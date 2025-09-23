@@ -14,13 +14,17 @@ from tkinter import scrolledtext
 import yt_dlp
 from mutagen.mp3 import MP3
 from mutagen.easyid3 import EasyID3
-from mutagen.mp4 import MP4, MP4Tags
+from mutagen.mp4 import MP4, MP4Cover
+import threading
+import urllib.request
+from urllib.parse import urlparse, parse_qs
+from mutagen.id3 import ID3, APIC, error
+from io import BytesIO
 
 #Sets default output path
 output_path = user_music_dir()
 
 class Downloader():
-
     def __init__(self):
         #updates screen
         screen.update_idletasks()
@@ -90,16 +94,39 @@ class Downloader():
             stream = yt.streams.filter(only_audio=True).first()
             convertin = stream.download(path) # Optional: specify download path
             convertout = convertin[:-3]+'mp3'
+
             self.convert_m4a_mp3(convertin, convertout)
 
             #attempts to apply metadata
-            self.apply_metadata(convertout, artist, album, date, genre)
+            self.apply_metadata(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
 
         except:
             output_and_scroll( "Error, content can't be downloaded")
 
-    #Converts the .m4a to .mp3
+    #Converts the .m4a to .mp3 also applies thumbnail
     def convert_m4a_mp3(self, file, path):
+    #Applies thumbnail
+        try:
+            audio = MP3(self.old_path, ID3=ID3)
+
+            #reads image
+            with open(self.full_image_path, "rb") as f:
+                image_data = f.read()
+                audio.tags.add(
+                    APIC(
+                        encoding=3,  # UTF-8
+                        mime='image/jpeg',
+                        type=3,  # 3 is for Front Cover
+                        desc='Cover',
+                        data=image_data
+                    )
+                )
+            audio.save()
+            print(f"Cover image embedded into {path}")
+            os.remove(self.full_image_path)
+        except:
+            print('error adding cover')
+
         if not os.path.exists(file):
             output_and_scroll(f"Error: Input file '{file}' not found.\n")
             return
@@ -126,14 +153,25 @@ class Downloader():
 
         os.remove(file)
 
+        self.old_path=path
+
     #applies the meta data
-    def apply_metadata(self, path, artist, album, date, genre):
+    def apply_metadata(self, path, path_mp3, artist, album, date, genre, video_id):
+        #gets the thumbnail image
+        try:
+            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+        except:
+            pass
+        try:
+            self.full_image_path = output_path + '/' + video_id + '.jpg'
+            urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
+            print(f'Thumbnail saved as', self.full_image_path)
+        except Exception as e:
+            print(f'Error downloading thumbnail: {e}')
+
         try:
             # Load the MP3 file with EasyID3
             audio = MP3(path, ID3=EasyID3)
-
-            # Print current title (if exists)
-            print(f"Original Title: {audio.get('title', ['N/A'])[0]}")
 
             # Modifies tags
             audio['artist'] = [artist]
@@ -147,6 +185,23 @@ class Downloader():
 
         except Exception as e:
             print(f"An error occurred: {e}")
+
+    #gets video id for the thumbnail image
+    def get_youtube_id(self, url, ignore_playlist=True):
+        if 'youtu.be' in url:
+            path = urlparse(url).path
+            return path.lstrip('/')
+        elif 'youtube.com' in url:
+            query = urlparse(url).query
+            if query:
+                query_params = parse_qs(query)
+                if 'v' in query_params:
+                    video_id = query_params['v'][0]
+                    if ignore_playlist and '&list=' in url:
+                        # Strip any playlist parameters
+                        return video_id.split('&')[0]
+                    return video_id
+        return None
 
 
 # defining the screen

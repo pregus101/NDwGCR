@@ -3,6 +3,8 @@ import os
 import subprocess
 import threading
 import logging
+from typing import Union
+from typing import TypeAlias
 
 from tkinter import ttk
 import tkinter as tk
@@ -32,26 +34,58 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 class OnlineMusicEntry():
+
+    # TODO: Work on better source identification.
+    source: int
+
     def __init__(self):
-        pass
+        self.is_downloaded = False;
         
     @staticmethod
-    def createFromYoutubeID(self, url) -> OnlineMusicEntry:
+    def create_from_youtube_ID(self, ID) -> OnlineMusicEntry:
+        pass
+-
+    @staticmethod
+    def create_from_spotify_ID(self, ID) -> OnlineMusicEntry:
         pass
 
-class ListOfMusic():
+    def download(self, path: str) -> None:
+        # ...
+        self.is_downloaded = True;
+        return
+
+    def convert_m4a_to_mp3(self) -> None:
+        pass
+
+    def apply_metadata() -> None:
+        pass
+
+    def _apply_youtube_metadata() -> None:
+        pass
+
+    def _apply_spotify_metadata() -> None:
+        pass
+
+class ListOfMusicEntries():
+
+    entry_list: list[OnlineMusicEntry]
+
     def __init__(self):
         pass
 
-    def appendFromSmartURL(self):
+    # Appends a single online music entry or multiple if the url is a playlist or single vide 
+    def smart_append_from_url(self, path):
         pass
 
-    def smartloadFromCSV(self, path):
+    def smart_append_from_cvs(self, path):
         pass
 
-    def downloadAll(self) -> bool:
-        pass
-
+    def downloadAll(self, path: str):
+        for entry in self.entry_list:
+            try:
+                entry.download(path)
+            except Exception as e:
+                logger.warn(f"Warning downloading files: {e}")
 
 class Downloader():
     def __init__(self):

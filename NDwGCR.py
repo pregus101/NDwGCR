@@ -67,11 +67,9 @@ class OnlineMusicEntry():
         pass
 
 class ListOfMusicEntries():
-
-    entry_list: list[OnlineMusicEntry]
-
+    
     def __init__(self):
-        pass
+        self.entry_list: list[OnlineMusicEntry] = []
 
     # Appends a single online music entry or multiple if the url is a playlist or single vide 
     def smart_append_from_url(self, path):
@@ -80,7 +78,7 @@ class ListOfMusicEntries():
     def smart_append_from_cvs(self, path):
         pass
 
-    def downloadAll(self, path: str):
+    def download_all(self, path: str):
         for entry in self.entry_list:
             try:
                 entry.download(path)

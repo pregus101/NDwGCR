@@ -42,11 +42,11 @@ class OnlineMusicEntry():
         self.is_downloaded = False;
         
     @staticmethod
-    def create_from_youtube_ID(self, ID) -> OnlineMusicEntry:
+    def create_from_youtube_ID(ID) -> OnlineMusicEntry:
         pass
 -
     @staticmethod
-    def create_from_spotify_ID(self, ID) -> OnlineMusicEntry:
+    def create_from_spotify_ID(ID) -> OnlineMusicEntry:
         pass
 
     def download(self, path: str) -> None:
@@ -57,13 +57,13 @@ class OnlineMusicEntry():
     def convert_m4a_to_mp3(self) -> None:
         pass
 
-    def apply_metadata() -> None:
+    def apply_metadata(self) -> None:
         pass
 
-    def _apply_youtube_metadata() -> None:
+    def _apply_youtube_metadata(self) -> None:
         pass
 
-    def _apply_spotify_metadata() -> None:
+    def _apply_spotify_metadata(self) -> None:
         pass
 
 class ListOfMusicEntries():

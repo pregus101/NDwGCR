@@ -120,7 +120,7 @@ class Downloader():
                 # Tell you what song it is on and how many you have left
                 self.progress_of_bar +=1
                 out_data = song[1] + ' by ' + song[3] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
-                output_and_scroll(out_data)
+                info_and_scroll(out_data)
 
                 # Gets the download url then downloads and converts it.
                 self.download_and_meta_url = self.search(song[1]+' '+song[3])
@@ -162,7 +162,7 @@ class Downloader():
             self.apply_metadata(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
 
         except:
-            output_and_scroll( "Error, content can't be downloaded")
+            info_and_scroll( "Error, content can't be downloaded")
 
     #Converts the .m4a to .mp3 also applies thumbnail
     # TODO: Class seperation
@@ -190,7 +190,7 @@ class Downloader():
             logger.error('Adding cover failed')
 
         if not os.path.exists(file):
-            output_and_scroll(f"Error: Input file '{file}' not found.\n")
+            info_and_scroll(f"Error: Input file '{file}' not found.\n")
             return
         if not os.path.isfile(path):
             try:
@@ -203,15 +203,15 @@ class Downloader():
                 ]
                     
                 subprocess.run(command, check=True, capture_output=True, text=True)
-                output_and_scroll(f"Successfully converted '{file}' to '{path}'\n")
+                info_and_scroll(f"Successfully converted '{file}' to '{path}'\n")
             except subprocess.CalledProcessError as e:
-                output_and_scroll(f"Error during conversion: {e}\n")
-                output_and_scroll(f"FFmpeg output: {e.stdout}\n")
-                output_and_scroll(f"FFmpeg error: {e.stderr}\n")
+                info_and_scroll(f"Error during conversion: {e}\n")
+                info_and_scroll(f"FFmpeg output: {e.stdout}\n")
+                info_and_scroll(f"FFmpeg error: {e.stderr}\n")
             except FileNotFoundError:
-                output_and_scroll("Error: FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
+                info_and_scroll("Error: FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
         else:
-            output_and_scroll('File already exists skipping.\n')
+            info_and_scroll('File already exists skipping.\n')
 
         os.remove(file)
 
@@ -270,20 +270,22 @@ def get_out_path():
     global output_path
     output_path = filedialog.askdirectory()
     if output_path:
-        output_and_scroll('Folder selected\n')
+        info_and_scroll('Folder selected\n')
     else:
         output_path = user_music_dir()
-        output_and_scroll('Using default path\n')
+        info_and_scroll('Using default path\n')
 
 def get_in_path():
     global input_path
     input_path = filedialog.askopenfilename()
     if input_path:
-        output_and_scroll('file selected\n')
+        info_and_scroll('file selected\n')
     else:
-        output_and_scroll('error no file selected\n')
+        info_and_scroll('error no file selected\n')
 
-def output_and_scroll(message):
+# TODO: ERR AND SCROLL
+def info_and_scroll(message):
+    logger.info(message);
     text_output_area.insert(tk.END, message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 

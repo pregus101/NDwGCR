@@ -1,34 +1,33 @@
-import csv
 import os
 import subprocess
 import threading
 import logging
-from typing import Union
-from typing import TypeAlias
+import csv
+from io import BytesIO
 from typing import Self
 
+# Why do we have this and import tkinter as tk?
+# TODO: Remove extra imports
+from tkinter import *
+from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
 from tkinter import scrolledtext
 
 from bs4 import BeautifulSoup
 import urllib.request
-from youtubesearchpython import VideosSearch
-from pytubefix import YouTube
-from tkinter import *
-from tkinter import filedialog
-from platformdirs import user_music_dir
-
-import yt_dlp
-from mutagen.mp3 import MP3
-from mutagen.easyid3 import EasyID3
-from mutagen.mp4 import MP4, MP4Cover
-import urllib.request
 from urllib.parse import urlparse, parse_qs
-from mutagen.id3 import ID3, APIC, error
-from io import BytesIO
 
+from youtubesearchpython import VideosSearch
+from pytubefix import YouTubeimport yt_dlp
+
+from mutagen.mp3 import MP3
+from mutagen.mp4 import MP4, MP4Cover
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3, APIC, error
 #Sets default output path
+
+from platformdirs import user_music_dir
 
 output_path = user_music_dir()
 logger = logging.getLogger(__name__)
@@ -147,11 +146,12 @@ class Downloader():
             })
         return video
 
-    # Downloads the music if it can't it will skip it This will also apply the meta data to the file
+    # Downloads the music if it can't it will skip it
+    # This will also apply the meta data to the file
     def download(self, path, url, artist, album, date, genre):
         yt = YouTube(url)
 
-        # tries to download the music. Returns error if you it can't
+        # tries to download the music. Raises an exception if it can't
         try:
             stream = yt.streams.filter(only_audio=True).first()
             convertin = stream.download(path) # Optional: specify download path
@@ -165,10 +165,11 @@ class Downloader():
         except:
             error_out("Content can't be downloaded")
 
-    #Converts the .m4a to .mp3 also applies thumbnail
+    # Converts the .m4a to .mp3 also applies thumbnail
     # TODO: Class seperation
     def convert_m4a_mp3(self, file, path):
-    #Applies thumbnail
+    # Applies thumbnail
+    # Why?
         try:
             audio = MP3(self.old_path, ID3=ID3)
 
@@ -218,9 +219,9 @@ class Downloader():
 
         self.old_path=path
 
-    #applies the meta data
+    # Applies the meta data
     def apply_metadata(self, path, path_mp3, artist, album, date, genre, video_id):
-        #gets the thumbnail image
+        # Gets the thumbnail image
         try:
             thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
         except:
@@ -249,7 +250,7 @@ class Downloader():
         except Exception as e:
             logger.error(f"{e}")
 
-    #gets video id for the thumbnail image
+    # Gets video id for the thumbnail image
     def get_youtube_id(self, url, ignore_playlist=True):
         if 'youtu.be' in url:
             path = urlparse(url).path
@@ -266,7 +267,7 @@ class Downloader():
                     return video_id
         return None
 
-#Getting the output file from the user
+# Getting the output file from the user
 def get_out_path():
     global output_path
     output_path = filedialog.askdirectory()
@@ -284,7 +285,6 @@ def get_in_path():
     else:
         error_out('No file selected\n')
 
-# TODO: ERR AND SCROLL
 def info_out(message: str):
     logger.info(message);
     text_output_area.insert(tk.END, message + "\n")
@@ -304,32 +304,32 @@ def warn_out(message: str):
 
 if __name__ == "__main__":
 
-    # defining the screen
+    # Defining the screen
     screen = Tk()
     screen.title("New spotify downloader")
 
-    #Setting Screen Size
+    # Setting Screen Size
     screen.geometry("540x740")
 
-    #Ensuring text stays centered
+    # Ensuring text stays centered
     screen.grid_columnconfigure(0, weight=1)  
 
-    #Making the background black
+    # Making the background black
     screen.configure(bg="black")
 
-    #Writing the inital text
+    # Writing the inital text
     inital_text = Label(text="Welcome\nplease select your CSV file and output folder", fg = 'violet', bg = 'black')
     inital_text.grid(row=0)
 
 
-    #defines the progress bar
+    # Defines the progress bar
     progress_bar_look = ttk.Style()
     progress_bar_look.theme_use('clam')
     progress_bar_look.configure("violet.Horizontal.TProgressbar", foreground='black', background='violet', highlightbackground = "black")
     progress_bar = ttk.Progressbar(screen,orient=HORIZONTAL, style='violet.Horizontal.TProgressbar', length=300,mode="determinate",takefocus=True)
     progress_bar.grid(row=5)
 
-    # #initializing data output gui
+    # Initializing data output gui
     text_output_area = tk.Text(screen, wrap='word', height=40, width=65)
     text_output_area.grid(row=6,column=0)
 
@@ -337,18 +337,18 @@ if __name__ == "__main__":
     scrollbar.grid(row=6,column=1)
     text_output_area.config(yscrollcommand=scrollbar.set)
 
-    #Getting the input file from the user
+    # Getting the input file from the user
     get_input = Button(text = "Select input file", fg = "violet", highlightbackground = "black", command = get_in_path)
     get_input.grid(row=2)
 
 
-    #Drawing the select path button
+    # Drawing the select path button
     download_path_button = Button(text = "Select output folder", fg = "violet", highlightbackground = "black", command = get_out_path)
     download_path_button.grid(row=3)
 
-    #Drawing the download button
+    # Drawing the download button
     download_button = Button(text = "Download", fg = "violet", highlightbackground = "black", command = Downloader)
     download_button.grid(row=4)
 
-    #Main screen loop
+    # Main screen loop
     screen.mainloop()

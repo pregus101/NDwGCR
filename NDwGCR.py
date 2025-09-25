@@ -5,6 +5,7 @@ import threading
 import logging
 from typing import Union
 from typing import TypeAlias
+from typing import Self
 
 from tkinter import ttk
 import tkinter as tk
@@ -42,11 +43,11 @@ class OnlineMusicEntry():
         self.is_downloaded = False;
         
     @staticmethod
-    def create_from_youtube_ID(ID) -> OnlineMusicEntry:
+    def create_from_youtube_ID(ID) -> Self:
         pass
 -
     @staticmethod
-    def create_from_spotify_ID(ID) -> OnlineMusicEntry:
+    def create_from_spotify_ID(ID) -> Self:
         pass
 
     def download(self, path: str) -> None:
@@ -83,7 +84,7 @@ class ListOfMusicEntries():
             try:
                 entry.download(path)
             except Exception as e:
-                logger.warn(f"Warning downloading files: {e}")
+                error_out(f"Exception downloading file: {e}")
 
 class Downloader():
     def __init__(self):
@@ -162,7 +163,7 @@ class Downloader():
             self.apply_metadata(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
 
         except:
-            info_out( "Error, content can't be downloaded")
+            error_out("Content can't be downloaded")
 
     #Converts the .m4a to .mp3 also applies thumbnail
     # TODO: Class seperation
@@ -190,7 +191,7 @@ class Downloader():
             logger.error('Adding cover failed')
 
         if not os.path.exists(file):
-            info_out(f"Error: Input file '{file}' not found.\n")
+            error_out(f"Input file '{file}' not found.\n")
             return
         if not os.path.isfile(path):
             try:
@@ -205,11 +206,11 @@ class Downloader():
                 subprocess.run(command, check=True, capture_output=True, text=True)
                 info_out(f"Successfully converted '{file}' to '{path}'\n")
             except subprocess.CalledProcessError as e:
-                info_out(f"Error during conversion: {e}\n")
+                error_out(f"Conversion failed: {e}\n")
                 info_out(f"FFmpeg output: {e.stdout}\n")
-                info_out(f"FFmpeg error: {e.stderr}\n")
+                error_out(f"FFmpeg: {e.stderr}\n")
             except FileNotFoundError:
-                info_out("Error: FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
+                error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
         else:
             info_out('File already exists skipping.\n')
 
@@ -229,7 +230,7 @@ class Downloader():
             urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
             logger.info(f'Thumbnail saved as', self.full_image_path)
         except Exception as e:
-            logger.error(f'Error downloading thumbnail: {e}')
+            logger.error(f'downloading thumbnail failed: {e}')
 
         try:
             # Load the MP3 file with EasyID3
@@ -246,7 +247,7 @@ class Downloader():
             logger.debug("Metadata updated successfully!")
 
         except Exception as e:
-            logger.error(f"An error occurred: {e}")
+            logger.error(f"{e}")
 
     #gets video id for the thumbnail image
     def get_youtube_id(self, url, ignore_playlist=True):
@@ -279,9 +280,9 @@ def get_in_path():
     global input_path
     input_path = filedialog.askopenfilename()
     if input_path:
-        info_out('file selected\n')
+        info_out('File selected\n')
     else:
-        info_out('error no file selected\n')
+        error_out('No file selected\n')
 
 # TODO: ERR AND SCROLL
 def info_out(message: str):

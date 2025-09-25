@@ -19,16 +19,17 @@ import urllib.request
 from urllib.parse import urlparse, parse_qs
 
 from youtubesearchpython import VideosSearch
-from pytubefix import YouTubeimport yt_dlp
+from pytubefix import YouTubeimport
+import yt_dlp
 
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4, MP4Cover
 from mutagen.easyid3 import EasyID3
 from mutagen.id3 import ID3, APIC, error
-#Sets default output path
 
 from platformdirs import user_music_dir
 
+# Sets default output path
 output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -39,19 +40,19 @@ class OnlineMusicEntry():
     source: int
 
     def __init__(self):
-        self.is_downloaded = False;
+        self.is_downloaded = False
         
     @staticmethod
     def create_from_youtube_ID(ID) -> Self:
         pass
--
+
     @staticmethod
     def create_from_spotify_ID(ID) -> Self:
         pass
 
     def download(self, path: str) -> None:
         # ...
-        self.is_downloaded = True;
+        self.is_downloaded = True
         return
 
     def convert_m4a_to_mp3(self) -> None:
@@ -71,7 +72,7 @@ class ListOfMusicEntries():
     def __init__(self):
         self.entry_list: list[OnlineMusicEntry] = []
 
-    # Appends a single online music entry or multiple if the url is a playlist or single vide 
+    # Appends a single online music entry or multiple if the url is a playlist or single video
     def smart_append_from_url(self, path):
         pass
 
@@ -155,7 +156,7 @@ class Downloader():
         try:
             stream = yt.streams.filter(only_audio=True).first()
             convertin = stream.download(path) # Optional: specify download path
-            convertout = convertin[:-3]+'mp3'
+            convertout = convertin[:-3] + 'mp3'
 
             self.convert_m4a_mp3(convertin, convertout)
 
@@ -286,17 +287,17 @@ def get_in_path():
         error_out('No file selected\n')
 
 def info_out(message: str):
-    logger.info(message);
+    logger.info(message)
     text_output_area.insert(tk.END, message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
     
 def error_out(message: str):
-    logger.error(message);
+    logger.error(message)
     text_output_area.insert(tk.END, "[ERROR]: " + message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 
 def warn_out(message: str):
-    logger.warn(message);
+    logger.warn(message)
     text_output_area.insert(tk.END, "[WARNING]: " + message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 

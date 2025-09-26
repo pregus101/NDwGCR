@@ -42,11 +42,11 @@ class OnlineMusicEntry():
         self.is_downloaded = False;
         
     @staticmethod
-    def create_from_youtube_ID(ID) -> OnlineMusicEntry:
+    def create_from_youtube_ID(ID): #-> OnlineMusicEntry:
         pass
--
+
     @staticmethod
-    def create_from_spotify_ID(ID) -> OnlineMusicEntry:
+    def create_from_spotify_ID(ID): # -> OnlineMusicEntry:
         pass
 
     def download(self, path: str) -> None:
@@ -88,8 +88,7 @@ class ListOfMusicEntries():
 class Downloader():
     def __init__(self):
         #updates screen
-        screen.update_idletasks()
-        screen.after(25)
+        screen.update()
 
         #Gets project path
         self.appPath = os.path.dirname(os.path.abspath(__file__))

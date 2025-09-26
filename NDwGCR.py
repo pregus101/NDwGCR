@@ -88,9 +88,7 @@ class ListOfMusicEntries():
 
 class Downloader():
     def __init__(self):
-        #updates screen
-        screen.update_idletasks()
-        screen.after(25)
+        screen.update()
 
         #Gets project path
         self.appPath = os.path.dirname(os.path.abspath(__file__))

@@ -44,7 +44,7 @@ class OnlineMusicEntry():
     @staticmethod
     def create_from_youtube_ID(ID) -> Self:
         pass
--
+
     @staticmethod
     def create_from_spotify_ID(ID) -> Self:
         pass

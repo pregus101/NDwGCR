@@ -19,7 +19,7 @@ import urllib.request
 from urllib.parse import urlparse, parse_qs
 
 from youtubesearchpython import VideosSearch
-from pytubefix import YouTubeimport
+from pytubefix import YouTube
 import yt_dlp
 
 from mutagen.mp3 import MP3

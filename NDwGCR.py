@@ -130,8 +130,7 @@ class Downloader():
                 progress_bar['value']+=1
 
                 # updates screen
-                screen.update_idletasks()
-                screen.after(25)
+                screen.update()
 
     # Finds the url based off of the song name and artist
     def search(self, term):

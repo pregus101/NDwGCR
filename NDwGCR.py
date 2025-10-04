@@ -27,6 +27,7 @@ from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4, MP4Cover
 from mutagen.easyid3 import EasyID3
 from mutagen.id3 import ID3, APIC, error
+from mutagen.easymp4 import EasyMP4
 
 from platformdirs import user_music_dir
 
@@ -34,6 +35,9 @@ from platformdirs import user_music_dir
 output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+#Sets default options
+global mp3_download
 mp3_download = True
 
 class OnlineMusicEntry():
@@ -90,6 +94,7 @@ class ListOfMusicEntries():
 
 class Downloader():
     def __init__(self):
+
         screen.update()
 
         #Gets project path
@@ -161,7 +166,10 @@ class Downloader():
                 self.convert_m4a_mp3(convertin, convertout)
 
                 # attempts to apply metadata
-                self.apply_metadata(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
+                self.apply_metadata_mp3(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
+            
+            else:
+                self.apply_metadata_m4a(convertin, artist, album, date, genre, self.get_youtube_id(url))
 
         except:
             error_out("Content can't be downloaded")
@@ -221,18 +229,24 @@ class Downloader():
         self.old_path=path
 
     # Applies the meta data
-    def apply_metadata(self, path, path_mp3, artist, album, date, genre, video_id):
+    def apply_metadata_mp3(self, path, path_mp3, artist, album, date, genre, video_id):
         # Gets the thumbnail image
         try:
             thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+            try:
+                self.full_image_path = output_path + '/' + video_id + '.jpg'
+                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
+                logger.info(f'Thumbnail saved as', self.full_image_path)
+            except Exception as e:
+                logger.error(f'downloading thumbnail failed: {e}')
         except:
-            pass
-        try:
-            self.full_image_path = output_path + '/' + video_id + '.jpg'
-            urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
-            logger.info(f'Thumbnail saved as', self.full_image_path)
-        except Exception as e:
-            logger.error(f'downloading thumbnail failed: {e}')
+            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
+            try:
+                self.full_image_path = output_path + '/' + video_id + '.jpg'
+                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
+                logger.info(f'Thumbnail saved as', self.full_image_path)
+            except Exception as e:
+                logger.error(f'downloading thumbnail failed: {e}')
 
         try:
             # Load the MP3 file with EasyID3
@@ -250,6 +264,66 @@ class Downloader():
 
         except Exception as e:
             logger.error(f"{e}")
+
+    def apply_metadata_m4a(self, path, artist, album, date, genre, video_id):
+        try:
+            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
+            try:
+                self.full_image_path = output_path + '/' + video_id + '.jpg'
+                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
+                logger.info(f'Thumbnail saved as', self.full_image_path)
+            except Exception as e:
+                logger.error(f'downloading thumbnail failed: {e}')
+        except:
+            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
+            try:
+                self.full_image_path = output_path + '/' + video_id + '.jpg'
+                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
+                logger.info(f'Thumbnail saved as', self.full_image_path)
+            except Exception as e:
+                logger.error(f'downloading thumbnail failed: {e}')
+
+        try:
+            audiofile = EasyMP4(path)
+
+            audiofile['artist'] = [artist]
+            audiofile['album'] = [album]
+            audiofile['date'] = [date]
+            audiofile['genre'] = [genre]
+
+            audiofile.save()
+            info_out(f"Metadata applied successfully to: {path}")
+        except FileNotFoundError:
+            error_out(f"File not found at {path}")
+        except Exception as e:
+            error_out(f"An error occurred: {e}")
+
+        try:
+            audio = MP4(path)
+
+            # Read the image data
+            with open(self.full_image_path, 'rb') as f:
+                image_data = f.read()
+
+            # Sets image format
+            image_format = MP4Cover.FORMAT_JPEG
+
+            # Create an MP4Cover object
+            cover = MP4Cover(image_data, imageformat=image_format)
+
+            # Assign the cover art to the 'covr' tag
+            audio['covr'] = [cover]
+
+            # Save the changes to the M4A file
+            audio.save()
+            info_out(f"Cover art successfully embedded into '{path}'")
+
+        except FileNotFoundError:
+            error_out(f"File not found. Check paths for '{path}' or '{self.full_image_path}'.")
+        except Exception as e:
+            error_out(f"An error occurred: {e}")
+
+        os.remove(self.full_image_path)
 
     # Gets video id for the thumbnail image
     def get_youtube_id(self, url, ignore_playlist=True):
@@ -287,15 +361,18 @@ def get_in_path():
     else:
         error_out('No file selected\n')
 
-# Opens the output window
+# Function for the mp3 option download
+def mp3_m4a_option():
+    global mp3_download
+    mp3_download = not(mp3_download)
+    print(mp3_download)
+    mp3_option_button.config(text=str(mp3_download))
+    screen.update()
+
+# Opens the options window (TODO)
 global options_window
 options_window = ''
 
-# Function for the mp3 option download
-def mp3_m4a_option():
-    mp3_download != mp3_download
-
-# Opens the options window
 def open_options_window():
 
     print("test")
@@ -323,8 +400,6 @@ def open_options_window():
 
         mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
         mp3_option_button.pack()
-
-    options_window.mainloop()
 
 def open_download_folder():
     
@@ -378,12 +453,17 @@ if __name__ == "__main__":
     screen.configure(bg="black")
 
     # Writing the inital text
-    inital_text = Label(text="Welcome\nplease select your CSV file and output folder", fg = 'violet', bg = 'black')
+    inital_text = Label(text="Welcome\nplease select your CSV file from exportify and output folder", fg = 'violet', bg = 'black')
     inital_text.grid(row=0)
 
-    # Button that opens the option windows
-    options_window_open_button = Button(text='Options', fg = "violet", highlightbackground = "black", command = open_options_window)
-    options_window_open_button.grid(row=5)
+    # Button that opens the option windows (TODO)
+    # options_window_open_button = Button(text='Options', fg = "violet", highlightbackground = "black", command = open_options_window)
+    # options_window_open_button.grid(row=5)
+
+
+    # Option button for downloading as and m4a or mp3
+    mp3_option_button = Button(text=str(mp3_download), fg = "violet", highlightbackground = "black", command = mp3_m4a_option)
+    mp3_option_button.grid(row=5)
 
     # Button that opens download folder
     open_download = Button(text="Open download folder", fg = "violet", highlightbackground = "black", command = open_download_folder)

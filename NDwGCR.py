@@ -5,6 +5,7 @@ import logging
 import csv
 from io import BytesIO
 from typing import Self
+import webbrowser
 
 # Why do we have this and import tkinter as tk?
 # TODO: Remove extra imports
@@ -33,6 +34,7 @@ from platformdirs import user_music_dir
 output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+mp3_download = True
 
 class OnlineMusicEntry():
 
@@ -155,10 +157,11 @@ class Downloader():
             convertin = stream.download(path) # Optional: specify download path
             convertout = convertin[:-3] + 'mp3'
 
-            self.convert_m4a_mp3(convertin, convertout)
+            if mp3_download:
+                self.convert_m4a_mp3(convertin, convertout)
 
-            # attempts to apply metadata
-            self.apply_metadata(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
+                # attempts to apply metadata
+                self.apply_metadata(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
 
         except:
             error_out("Content can't be downloaded")
@@ -275,6 +278,7 @@ def get_out_path():
         output_path = user_music_dir()
         info_out('Using default path\n')
 
+# Getting the path to the input CSV file
 def get_in_path():
     global input_path
     input_path = filedialog.askopenfilename()
@@ -282,6 +286,61 @@ def get_in_path():
         info_out('File selected\n')
     else:
         error_out('No file selected\n')
+
+# Opens the output window
+global options_window
+options_window = ''
+
+# Function for the mp3 option download
+def mp3_m4a_option():
+    mp3_download != mp3_download
+
+# Opens the options window
+def open_options_window():
+
+    print("test")
+
+    global options_window
+
+    try:
+        if 'normal' != options_window.state():
+            options_window = Tk()
+            options_window.title("Options window")
+            options_window.configure(bg="black")
+
+            mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
+            mp3_option_button.pack()
+
+    except:
+        options_window = Tk()
+        options_window.title("Options window")
+        options_window.configure(bg="black")
+
+        mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
+        mp3_option_button.pack()
+
+        options_window.mainloop()
+
+def open_download_folder():
+    """
+    Opens the specified folder in a new Finder window on macOS.
+
+    Args:
+        folder_path (str): The absolute path to the folder to open.
+    """
+    if not os.path.isdir(output_path):
+        error_out(f"Folder '{output_path}' does not exist.")
+        return
+
+    try:
+        subprocess.run(["open", output_path], check=True)
+        info_out(f"Opened folder '{output_path}' in Finder.")
+    except:
+        try:
+            webbrowser.open(output_path)
+            info_out(f"Opened folder '{output_path}' in Finder.")
+        except:
+            error_out("Unable to open download path.")
 
 def info_out(message: str):
     logger.info(message)
@@ -294,7 +353,7 @@ def error_out(message: str):
     text_output_area.see(tk.END) # Auto-scroll to the end
 
 def warn_out(message: str):
-    logger.warn(message)
+    logger.warning(message)
     text_output_area.insert(tk.END, "[WARNING]: " + message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 
@@ -319,20 +378,27 @@ if __name__ == "__main__":
     inital_text = Label(text="Welcome\nplease select your CSV file and output folder", fg = 'violet', bg = 'black')
     inital_text.grid(row=0)
 
+    # Button that opens the option windows
+    options_window_open_button = Button(text='Options', fg = "violet", highlightbackground = "black", command = open_options_window)
+    options_window_open_button.grid(row=5)
+
+    # Button that opens download folder
+    open_download = Button(text="Open download folder", fg = "violet", highlightbackground = "black", command = open_download_folder)
+    open_download.grid(row=6)
 
     # Defines the progress bar
     progress_bar_look = ttk.Style()
     progress_bar_look.theme_use('clam')
     progress_bar_look.configure("violet.Horizontal.TProgressbar", foreground='black', background='violet', highlightbackground = "black")
     progress_bar = ttk.Progressbar(screen,orient=HORIZONTAL, style='violet.Horizontal.TProgressbar', length=300,mode="determinate",takefocus=True)
-    progress_bar.grid(row=5)
+    progress_bar.grid(row=7)
 
     # Initializing data output gui
     text_output_area = tk.Text(screen, wrap='word', height=40, width=65)
-    text_output_area.grid(row=6,column=0)
+    text_output_area.grid(row=8,column=0)
 
     scrollbar = tk.Scrollbar(screen, command=text_output_area.yview)
-    scrollbar.grid(row=6,column=1)
+    scrollbar.grid(row=8,column=1)
     text_output_area.config(yscrollcommand=scrollbar.set)
 
     # Getting the input file from the user

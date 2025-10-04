@@ -304,30 +304,31 @@ def open_options_window():
 
     try:
         if 'normal' != options_window.state():
-            options_window = Tk()
+            options_window = Toplevel(screen)
             options_window.title("Options window")
             options_window.configure(bg="black")
 
             mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
             mp3_option_button.pack()
 
+        else:
+            mp3_download.config(text=str(mp3_download))
+                                
+            options_window.update()
+
     except:
-        options_window = Tk()
+        options_window = Toplevel(screen)
         options_window.title("Options window")
         options_window.configure(bg="black")
 
         mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
         mp3_option_button.pack()
 
-        options_window.mainloop()
+    options_window.mainloop()
 
 def open_download_folder():
-    """
-    Opens the specified folder in a new Finder window on macOS.
-
-    Args:
-        folder_path (str): The absolute path to the folder to open.
-    """
+    
+    # Tries opening the folder in a new finder window on mac
     if not os.path.isdir(output_path):
         error_out(f"Folder '{output_path}' does not exist.")
         return
@@ -336,6 +337,8 @@ def open_download_folder():
         subprocess.run(["open", output_path], check=True)
         info_out(f"Opened folder '{output_path}' in Finder.")
     except:
+
+        # If it fails to open the folder in finder it will try to open the folder using Explorer on Windows
         try:
             webbrowser.open(output_path)
             info_out(f"Opened folder '{output_path}' in Finder.")

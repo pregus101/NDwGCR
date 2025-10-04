@@ -1,0 +1,6 @@
+mutagen
+urllib3
+bs4
+pytubefix
+yt_dlp
+platformdirs

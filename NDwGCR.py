@@ -460,28 +460,31 @@ if __name__ == "__main__":
     # options_window_open_button = Button(text='Options', fg = "violet", highlightbackground = "black", command = open_options_window)
     # options_window_open_button.grid(row=5)
 
+    # Label explaining what the bottom button does.
+    download_as_mp3_label = Label(text="Download as mp3:", fg = 'violet', bg = 'black')
+    download_as_mp3_label.grid(row=5)
 
     # Option button for downloading as and m4a or mp3
-    mp3_option_button = Button(text=str(mp3_download), fg = "violet", highlightbackground = "black", command = mp3_m4a_option)
-    mp3_option_button.grid(row=5)
+    mp3_option_button = Button(text=str(mp3_download), fg = "violet", highlightbackground = "black", command = mp3_m4a_option, relief="sunken")
+    mp3_option_button.grid(row=6)
 
     # Button that opens download folder
     open_download = Button(text="Open download folder", fg = "violet", highlightbackground = "black", command = open_download_folder)
-    open_download.grid(row=6)
+    open_download.grid(row=7)
 
     # Defines the progress bar
     progress_bar_look = ttk.Style()
     progress_bar_look.theme_use('clam')
     progress_bar_look.configure("violet.Horizontal.TProgressbar", foreground='black', background='violet', highlightbackground = "black")
     progress_bar = ttk.Progressbar(screen,orient=HORIZONTAL, style='violet.Horizontal.TProgressbar', length=300,mode="determinate",takefocus=True)
-    progress_bar.grid(row=7)
+    progress_bar.grid(row=8)
 
     # Initializing data output gui
     text_output_area = tk.Text(screen, wrap='word', height=40, width=65)
-    text_output_area.grid(row=8,column=0)
+    text_output_area.grid(row=9,column=0)
 
     scrollbar = tk.Scrollbar(screen, command=text_output_area.yview)
-    scrollbar.grid(row=8,column=1)
+    scrollbar.grid(row=9,column=1)
     text_output_area.config(yscrollcommand=scrollbar.set)
 
     # Getting the input file from the user

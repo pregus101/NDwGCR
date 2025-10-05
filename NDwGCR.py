@@ -21,7 +21,7 @@ from urllib.parse import urlparse, parse_qs
 
 from youtubesearchpython import VideosSearch
 from pytubefix import YouTube
-import yt_dlp
+import yt_dlp # type: ignore
 
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4, MP4Cover

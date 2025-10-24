@@ -475,22 +475,24 @@ def custom_playlist():
     custom_playlist_screen.title("Custom playlist window")
     custom_playlist_screen.geometry("500x500")
 
-    custom_play_text = Label(custom_playlist_screen, text="Please input your songs like this\n If you don't know just leave a blank space in between the commas \n Name, Album, Artist, Date, Genre")
+    custom_playlist_screen.configure(bg="black")
+
+    custom_play_text = Label(custom_playlist_screen, text="Please input your songs like this\n If you don't know just leave a blank space in between the commas \n Name, Album, Artist, Date, Genre", fg = 'violet', bg = 'black')
     custom_play_text.pack()
 
     entry = tk.Entry(custom_playlist_screen, width=40)
     entry.pack(pady=10)
 
-    add_button = tk.Button(custom_playlist_screen, text="add item to the custom playlist", command=add_item)
+    add_button = tk.Button(custom_playlist_screen, text="add item to the custom playlist", command=add_item, fg = "violet", highlightbackground = "black")
     add_button.pack()
 
     custom_playlist_screen_list = tk.Listbox(custom_playlist_screen, height=10, width=40, selectmode="multiple")
     custom_playlist_screen_list.pack(pady=10)
 
-    add_button = tk.Button(custom_playlist_screen, text="remove item to the custom playlist", command=remove_item)
+    add_button = tk.Button(custom_playlist_screen, text="remove item from the custom playlist", command=remove_item, fg = "violet", highlightbackground = "black")
     add_button.pack()
 
-    add_button = tk.Button(custom_playlist_screen, text="Clear the custom playlist", command=clear_playlist)
+    add_button = tk.Button(custom_playlist_screen, text="Clear the custom playlist", command=clear_playlist, fg = "violet", highlightbackground = "black")
     add_button.pack()
 
 
@@ -511,7 +513,7 @@ if __name__ == "__main__":
     screen.configure(bg="black")
 
     # Writing the inital text
-    inital_text = Label(text="Welcome\nplease select your CSV file from exportify or press manual add and select output folder", fg = 'violet', bg = 'black')
+    inital_text = Label(text="Welcome\nplease select your CSV file from exportify\n or press manual add and select output folder", fg = 'violet', bg = 'black')
     inital_text.grid(row=0)
 
     # Button that opens the option windows (TODO)

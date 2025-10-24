@@ -387,6 +387,7 @@ def warn_out(message: str):
 
 global custom_playlist_screen_list, entry
 
+# The command to add things to the Custom CSV
 def add_item():
     global custom_playlist_screen_list, entry
 
@@ -411,6 +412,62 @@ def add_item():
         custom_playlist_screen_list.insert(tk.END, item)
         entry.delete(0, tk.END)
 
+# The command for removing a value from the CSV file and listbox
+def remove_item():
+    selected_indices = custom_playlist_screen_list.curselection()
+
+    clear = []
+
+    for index in selected_indices:
+        clear.append(custom_playlist_screen_list.get(index))  # Get value for each index
+
+    with open('custom.csv', 'r+') as file:
+        csv_reader = csv.reader(file)
+        writer = csv.writer(file)
+
+        write = []
+
+        for row in csv_reader:
+            for value in clear:
+                try:
+                    comparitve_value1 = [row[1], row[2], row[3], row[4], row[10]]
+                    comparitve_value2 = value.split(",")
+                    if comparitve_value1 != comparitve_value2:
+                        write.append(row)
+                        print(write)
+                except:
+                    pass
+
+        with open("custom.csv", "r+") as f:
+            f.truncate(0)
+            writer = csv.writer(f)
+            writer.writerow('')
+
+        writer = csv.writer(file)
+        for row in write:
+            print(write, row)
+            writer.writerow(row)
+
+    for index in selected_indices[::-1]:  # Iterate in reverse order
+        custom_playlist_screen_list.delete(index)
+
+# The command for clearing the custom CSV and playlist
+def clear_playlist():
+    size = custom_playlist_screen_list.size()
+
+    while size != 0:
+        size = custom_playlist_screen_list.size()
+
+        for i in range(0, size):
+            custom_playlist_screen_list.delete(i)
+
+    # Clears the custom playlist CSV
+    with open("custom.csv", "r+") as f:
+        f.truncate(0)
+        writer = csv.writer(f)
+        writer.writerow('')
+
+# Defines the things in a custom CSV
 def custom_playlist():
     global custom_playlist_screen_list, entry
 
@@ -429,6 +486,13 @@ def custom_playlist():
 
     custom_playlist_screen_list = tk.Listbox(custom_playlist_screen, height=10, width=40, selectmode="multiple")
     custom_playlist_screen_list.pack(pady=10)
+
+    add_button = tk.Button(custom_playlist_screen, text="remove item to the custom playlist", command=remove_item)
+    add_button.pack()
+
+    add_button = tk.Button(custom_playlist_screen, text="Clear the custom playlist", command=clear_playlist)
+    add_button.pack()
+
 
 
 if __name__ == "__main__":

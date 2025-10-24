@@ -13,7 +13,6 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 import tkinter as tk
-from tkinter import scrolledtext
 
 from bs4 import BeautifulSoup
 import urllib.request
@@ -36,9 +35,18 @@ output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-#Sets default options
+# Sets default options
 global mp3_download
 mp3_download = True
+
+# Clears the custom playlist csv and sets the default csv file to be the custom playlist one
+with open("custom.csv", "r+") as f:
+    f.truncate(0)
+    writer = csv.writer(f)
+    writer.writerow('')
+
+global custom_playlist
+input_path = "custom.csv"
 
 class OnlineMusicEntry():
 
@@ -162,14 +170,13 @@ class Downloader():
             convertin = stream.download(path) # Optional: specify download path
             convertout = convertin[:-3] + 'mp3'
 
+            # Applies meta_data
+            self.apply_metadata(convertin, artist, album, date, genre, self.get_youtube_id(url))
+
+            # If mp3 selected then it will convert it to mp3
             if mp3_download:
                 self.convert_m4a_mp3(convertin, convertout)
 
-                # attempts to apply metadata
-                self.apply_metadata_mp3(convertout, convertin, artist, album, date, genre, self.get_youtube_id(url))
-            
-            else:
-                self.apply_metadata_m4a(convertin, artist, album, date, genre, self.get_youtube_id(url))
 
         except:
             error_out("Content can't be downloaded")
@@ -177,28 +184,6 @@ class Downloader():
     # Converts the .m4a to .mp3 also applies thumbnail
     # TODO: Class seperation
     def convert_m4a_mp3(self, file, path):
-    # Applies thumbnail
-    # Why?
-        try:
-            audio = MP3(self.old_path, ID3=ID3)
-
-            #reads image
-            with open(self.full_image_path, "rb") as f:
-                image_data = f.read()
-                audio.tags.add(
-                    APIC(
-                        encoding=3,  # UTF-8
-                        mime='image/jpeg',
-                        type=3,  # 3 is for Front Cover
-                        desc='Cover',
-                        data=image_data
-                    )
-                )
-            audio.save()
-            logger.info(f"Cover image embedded into {path}")
-            os.remove(self.full_image_path)
-        except:
-            logger.error('Adding cover failed')
 
         if not os.path.exists(file):
             error_out(f"Input file '{file}' not found.\n")
@@ -228,44 +213,8 @@ class Downloader():
 
         self.old_path=path
 
-    # Applies the meta data
-    def apply_metadata_mp3(self, path, path_mp3, artist, album, date, genre, video_id):
-        # Gets the thumbnail image
-        try:
-            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
-            try:
-                self.full_image_path = output_path + '/' + video_id + '.jpg'
-                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
-                logger.info(f'Thumbnail saved as', self.full_image_path)
-            except Exception as e:
-                logger.error(f'downloading thumbnail failed: {e}')
-        except:
-            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
-            try:
-                self.full_image_path = output_path + '/' + video_id + '.jpg'
-                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
-                logger.info(f'Thumbnail saved as', self.full_image_path)
-            except Exception as e:
-                logger.error(f'downloading thumbnail failed: {e}')
-
-        try:
-            # Load the MP3 file with EasyID3
-            audio = MP3(path, ID3=EasyID3)
-
-            # Modifies tags
-            audio['artist'] = [artist]
-            audio['album'] = [album]
-            audio['date'] = [date]
-            audio['genre'] = [genre] 
-
-            # Save the changes
-            audio.save()
-            logger.debug("Metadata updated successfully!")
-
-        except Exception as e:
-            logger.error(f"{e}")
-
-    def apply_metadata_m4a(self, path, artist, album, date, genre, video_id):
+    # Applies metadata
+    def apply_metadata(self, path, artist, album, date, genre, video_id):
         try:
             thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
             try:
@@ -359,7 +308,8 @@ def get_in_path():
     if input_path:
         info_out('File selected\n')
     else:
-        error_out('No file selected\n')
+        error_out('No file selected using defualt csv (manual add)\n')
+        input_path = "custom.csv"
 
 # Function for the mp3 option download
 def mp3_m4a_option():
@@ -435,6 +385,50 @@ def warn_out(message: str):
     text_output_area.insert(tk.END, "[WARNING]: " + message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 
+global custom_playlist_screen_list, entry
+
+def add_item():
+    global custom_playlist_screen_list, entry
+
+    item = entry.get()
+
+    if item:
+
+        out = item
+
+        out = out.split(",")
+
+        out.insert(0, "")
+
+        for i in range(0, 5):
+            out.insert(5, "")
+
+        with open('custom.csv', 'a', newline='') as file:
+            writer = csv.writer(file)
+
+            writer.writerow(out)
+
+        custom_playlist_screen_list.insert(tk.END, item)
+        entry.delete(0, tk.END)
+
+def custom_playlist():
+    global custom_playlist_screen_list, entry
+
+    custom_playlist_screen = tk.Toplevel(screen)
+    custom_playlist_screen.title("Custom playlist window")
+    custom_playlist_screen.geometry("500x500")
+
+    custom_play_text = Label(custom_playlist_screen, text="Please input your songs like this\n If you don't know just leave a blank space in between the commas \n Name, Album, Artist, Date, Genre")
+    custom_play_text.pack()
+
+    entry = tk.Entry(custom_playlist_screen, width=40)
+    entry.pack(pady=10)
+
+    add_button = tk.Button(custom_playlist_screen, text="add item to the custom playlist", command=add_item)
+    add_button.pack()
+
+    custom_playlist_screen_list = tk.Listbox(custom_playlist_screen, height=10, width=40, selectmode="multiple")
+    custom_playlist_screen_list.pack(pady=10)
 
 
 if __name__ == "__main__":
@@ -453,7 +447,7 @@ if __name__ == "__main__":
     screen.configure(bg="black")
 
     # Writing the inital text
-    inital_text = Label(text="Welcome\nplease select your CSV file from exportify and output folder", fg = 'violet', bg = 'black')
+    inital_text = Label(text="Welcome\nplease select your CSV file from exportify or press manual add and select output folder", fg = 'violet', bg = 'black')
     inital_text.grid(row=0)
 
     # Button that opens the option windows (TODO)
@@ -477,14 +471,14 @@ if __name__ == "__main__":
     progress_bar_look.theme_use('clam')
     progress_bar_look.configure("violet.Horizontal.TProgressbar", foreground='black', background='violet', highlightbackground = "black")
     progress_bar = ttk.Progressbar(screen,orient=HORIZONTAL, style='violet.Horizontal.TProgressbar', length=300,mode="determinate",takefocus=True)
-    progress_bar.grid(row=8)
+    progress_bar.grid(row=9)
 
     # Initializing data output gui
-    text_output_area = tk.Text(screen, wrap='word', height=40, width=65)
-    text_output_area.grid(row=9,column=0)
+    text_output_area = tk.Text(screen, wrap='word', height=20, width=65)
+    text_output_area.grid(row=10,column=0)
 
     scrollbar = tk.Scrollbar(screen, command=text_output_area.yview)
-    scrollbar.grid(row=9,column=1)
+    scrollbar.grid(row=10,column=1)
     text_output_area.config(yscrollcommand=scrollbar.set)
 
     # Getting the input file from the user
@@ -499,6 +493,9 @@ if __name__ == "__main__":
     # Drawing the download button
     download_button = Button(text = "Download", fg = "violet", highlightbackground = "black", command = Downloader)
     download_button.grid(row=4)
+
+    open_window_button = Button(text = "Manual Add", fg = "violet", highlightbackground = "black", command = custom_playlist)
+    open_window_button.grid(row=8)
 
     # Main screen loop
     screen.mainloop()

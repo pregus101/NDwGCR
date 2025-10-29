@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Sets default options
-global mp3_download
-mp3_download = True
+global mp3, wav
+mp3, wav = [False, False]
 
 # Clears the custom playlist csv and sets the default csv file to be the custom playlist one
 with open("custom.csv", "r+") as f:
@@ -167,15 +167,20 @@ class Downloader():
         # tries to download the music. Raises an exception if it can't
         try:
             stream = yt.streams.filter(only_audio=True).first()
-            convertin = stream.download(path) # Optional: specify download path
-            convertout = convertin[:-3] + 'mp3'
+            path_to_og = stream.download(path) # Optional: specify download path
 
             # Applies meta_data
-            self.apply_metadata(convertin, artist, album, date, genre, self.get_youtube_id(url))
+            self.apply_metadata(path_to_og, artist, album, date, genre, self.get_youtube_id(url))
 
-            # If mp3 selected then it will convert it to mp3
-            if mp3_download:
-                self.convert_m4a_mp3(convertin, convertout)
+            # Depending on which extension is selected the extension will be downloaded
+
+            global mp3, wav
+
+            if mp3:
+                self.converter(path_to_og, "mp3")
+
+            if wav:
+                self.converter(path_to_og, "wav")
 
 
         except:
@@ -183,54 +188,89 @@ class Downloader():
 
     # Converts the .m4a to .mp3 also applies thumbnail
     # TODO: Class seperation
-    def convert_m4a_mp3(self, file, path):
 
-        if not os.path.exists(file):
-            error_out(f"Input file '{file}' not found.\n")
-            return
-        if not os.path.isfile(path):
-            try:
-                command = [
-                    'ffmpeg',
-                    '-i', file,
-                    '-acodec', 'libmp3lame',
-                    '-q:a', '0',
-                    path
-                ]
-                    
-                subprocess.run(command, check=True, capture_output=True, text=True)
-                info_out(f"Successfully converted '{file}' to '{path}'\n")
-            except subprocess.CalledProcessError as e:
-                error_out(f"Conversion failed: {e}\n")
-                info_out(f"FFmpeg output: {e.stdout}\n")
-                error_out(f"FFmpeg: {e.stderr}\n")
-            except FileNotFoundError:
-                error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
-        else:
-            info_out('File already exists skipping.\n')
+    def converter(self, path, type):
 
-        os.remove(file)
+        success  = False
+        
+        if type == "mp3":
 
-        self.old_path=path
+            out_file = path[:-3] + "mp3"
+
+            if not os.path.exists(path):
+                error_out(f"Input file '{path}' not found.\n")
+                return
+            if not os.path.isfile(out_file):
+                try:
+                    command = [
+                        'ffmpeg',
+                        '-i', path,
+                        '-acodec', 'libmp3lame',
+                        '-q:a', '0',
+                        out_file
+                    ]
+                        
+                    subprocess.run(command, check=True, capture_output=True, text=True)
+                    info_out(f"Successfully converted '{path}' to '{out_file}'\n")
+                except subprocess.CalledProcessError as e:
+                    error_out(f"Conversion failed: {e}\n")
+                    info_out(f"FFmpeg output: {e.stdout}\n")
+                    error_out(f"FFmpeg: {e.stderr}\n")
+                except FileNotFoundError:
+                    error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
+            else:
+                info_out('File already exists skipping.\n')
+
+            os.remove(path)
+
+        if type == "wav":
+
+            out_file = path[:-3] + "wav"
+
+            if not os.path.exists(path):
+                error_out(f"Input file '{path}' not found.\n")
+                return
+            if not os.path.isfile(out_file):
+                try:
+                    command = [
+                        'ffmpeg',
+                        '-i', path,
+                        '-acodec', 'pcm_s16le',
+                        '-ar', '44100', "-ac", "2",
+                        out_file
+                    ]
+                        
+                    subprocess.run(command, check=True, capture_output=True, text=True)
+                    info_out(f"Successfully converted '{path}' to '{out_file}'\n")
+                except subprocess.CalledProcessError as e:
+                    error_out(f"Conversion failed: {e}\n")
+                    info_out(f"FFmpeg output: {e.stdout}\n")
+                    error_out(f"FFmpeg: {e.stderr}\n")
+                except FileNotFoundError:
+                    error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
+            else:
+                info_out('File already exists skipping.\n')
+
+            os.remove(path)
 
     # Applies metadata
     def apply_metadata(self, path, artist, album, date, genre, video_id):
+        thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
         try:
-            thumbnail_url = f'https://img.youtube.com/vi/{video_id}/maxresdefault.jpg'
-            try:
-                self.full_image_path = output_path + '/' + video_id + '.jpg'
-                urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
-                logger.info(f'Thumbnail saved as', self.full_image_path)
-            except Exception as e:
-                logger.error(f'downloading thumbnail failed: {e}')
-        except:
+            self.full_image_path = output_path + '/' + video_id + '.jpg'
+            urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
+            logger.info(f'Thumbnail saved as', self.full_image_path)
+        except Exception as e:
+            logger.error(f'downloading thumbnail failed: {e}')
+
             thumbnail_url = f'https://img.youtube.com/vi/{video_id}/default.jpg'
             try:
                 self.full_image_path = output_path + '/' + video_id + '.jpg'
                 urllib.request.urlretrieve(thumbnail_url, self.full_image_path)
                 logger.info(f'Thumbnail saved as', self.full_image_path)
             except Exception as e:
-                logger.error(f'downloading thumbnail failed: {e}')
+                logger.error(f'downloading low res thumbnail failed: {e}')
+    
 
         try:
             audiofile = EasyMP4(path)
@@ -311,45 +351,52 @@ def get_in_path():
         error_out('No file selected using defualt csv (manual add)\n')
         input_path = "custom.csv"
 
-# Function for the mp3 option download
-def mp3_m4a_option():
-    global mp3_download
-    mp3_download = not(mp3_download)
-    print(mp3_download)
-    mp3_option_button.config(text=str(mp3_download))
-    screen.update()
+def select_download_option():
+    global download_options, mp3, wav
+
+    selected_option = download_options.get(download_options.curselection())
+
+    if selected_option == "mp3":
+        mp3 = True
+        wav = False
+        both = False
+        info_out("mp3 selected\n")
+
+    elif selected_option == "wav":
+        wav = True
+        mp3 = False
+        both = False
+        info_out("wav selected\n")
+
+    elif selected_option == "wav" and selected_option == "mp3":
+        both = True
+        wav = False
+        mp3 = False
+
+    else:
+        wav = False
+        mp3 = False
+        both = False
+        info_out("m4a selected\n")
 
 # Opens the options window (TODO)
-global options_window
-options_window = ''
-
 def open_options_window():
+    global download_options
 
-    print("test")
+    options_menu_window = tk.Toplevel(screen)
+    options_menu_window.title("Options window")
 
-    global options_window
+    options_menu_window.geometry("500x500")
 
-    try:
-        if 'normal' != options_window.state():
-            options_window = Toplevel(screen)
-            options_window.title("Options window")
-            options_window.configure(bg="black")
+    download_options = tk.Listbox(options_menu_window, height=10, width=40, selectmode="single")
+    download_options.pack(pady=10)
 
-            mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
-            mp3_option_button.pack()
+    download_options.insert(tk.END, "m4a")
+    download_options.insert(tk.END, "mp3")
+    download_options.insert(tk.END, "wav")
 
-        else:
-            mp3_download.config(text=str(mp3_download))
-                                
-            options_window.update()
-
-    except:
-        options_window = Toplevel(screen)
-        options_window.title("Options window")
-        options_window.configure(bg="black")
-
-        mp3_option_button = Button(options_window, text=str(mp3_download), fg = "violet", highlightbackground = "black", command = [mp3_m4a_option, open_options_window])
-        mp3_option_button.pack()
+    select_download_option_button = Button(options_menu_window, text="select", command=select_download_option, fg = "violet", highlightbackground = "black")
+    select_download_option_button.pack()
 
 def open_download_folder():
     
@@ -516,16 +563,12 @@ if __name__ == "__main__":
     inital_text = Label(text="Welcome\nplease select your CSV file from exportify\n or press manual add and select output folder", fg = 'violet', bg = 'black')
     inital_text.grid(row=0)
 
-    # Button that opens the option windows (TODO)
-    # options_window_open_button = Button(text='Options', fg = "violet", highlightbackground = "black", command = open_options_window)
-    # options_window_open_button.grid(row=5)
-
     # Label explaining what the bottom button does.
-    download_as_mp3_label = Label(text="Download as mp3:", fg = 'violet', bg = 'black')
-    download_as_mp3_label.grid(row=5)
+    # download_as_mp3_label = Label(text="Download as mp3:", fg = 'violet', bg = 'black')
+    # download_as_mp3_label.grid(row=5)
 
     # Option button for downloading as and m4a or mp3
-    mp3_option_button = Button(text=str(mp3_download), fg = "violet", highlightbackground = "black", command = mp3_m4a_option, relief="sunken")
+    mp3_option_button = Button(text="Open the options window", fg = "violet", highlightbackground = "black", command = open_options_window, relief="sunken")
     mp3_option_button.grid(row=6)
 
     # Button that opens download folder

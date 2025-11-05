@@ -35,10 +35,6 @@ output_path = user_music_dir()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Sets default options
-global mp3, wav
-mp3, wav = [False, False]
-
 # Clears the custom playlist csv and sets the default csv file to be the custom playlist one
 with open("custom.csv", "r+") as f:
     f.truncate(0)
@@ -172,15 +168,8 @@ class Downloader():
             # Applies meta_data
             self.apply_metadata(path_to_og, artist, album, date, genre, self.get_youtube_id(url))
 
-            # Depending on which extension is selected the extension will be downloaded
-
-            global mp3, wav
-
-            if mp3:
-                self.converter(path_to_og, "mp3")
-
-            if wav:
-                self.converter(path_to_og, "wav")
+            # Will convert the files based on the options selected 
+            self.converter(path_to_og)
 
 
         except:
@@ -189,69 +178,77 @@ class Downloader():
     # Converts the .m4a to .mp3 also applies thumbnail
     # TODO: Class seperation
 
-    def converter(self, path, type):
+    def converter(self, path):
 
-        success  = False
+        global download_options
+
+        extensions = []
+
+        command = ''
+
+        try:
+            for index in download_options.curselection():
+                extensions.append(download_options.get(index))
+        except:
+            extensions = ['m4a']
         
-        if type == "mp3":
+        if extensions != []:
+            try:
+                for extend in extensions:
+                    if extend == 'mp3':
 
-            out_file = path[:-3] + "mp3"
+                        out_file = path[:-3] + 'mp3'
 
-            if not os.path.exists(path):
-                error_out(f"Input file '{path}' not found.\n")
-                return
-            if not os.path.isfile(out_file):
-                try:
-                    command = [
-                        'ffmpeg',
-                        '-i', path,
-                        '-acodec', 'libmp3lame',
-                        '-q:a', '0',
-                        out_file
-                    ]
-                        
-                    subprocess.run(command, check=True, capture_output=True, text=True)
-                    info_out(f"Successfully converted '{path}' to '{out_file}'\n")
-                except subprocess.CalledProcessError as e:
-                    error_out(f"Conversion failed: {e}\n")
-                    info_out(f"FFmpeg output: {e.stdout}\n")
-                    error_out(f"FFmpeg: {e.stderr}\n")
-                except FileNotFoundError:
-                    error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
-            else:
-                info_out('File already exists skipping.\n')
+                        if not os.path.exists(path):
+                            error_out(f"Input file '{path}' not found.\n")
+                            return
+                        if not os.path.isfile(out_file):
+                            command = [
+                                'ffmpeg',
+                                '-i', path,
+                                '-acodec', 'libmp3lame',
+                                '-q:a', '0',
+                                out_file
+                            ]
 
-            os.remove(path)
+                        else:
+                            info_out('File already exists skipping.\n')
 
-        if type == "wav":
+                    if extend == 'wav':
 
-            out_file = path[:-3] + "wav"
+                        out_file = path[:-3] + "wav"
 
-            if not os.path.exists(path):
-                error_out(f"Input file '{path}' not found.\n")
-                return
-            if not os.path.isfile(out_file):
-                try:
-                    command = [
-                        'ffmpeg',
-                        '-i', path,
-                        '-acodec', 'pcm_s16le',
-                        '-ar', '44100', "-ac", "2",
-                        out_file
-                    ]
-                        
-                    subprocess.run(command, check=True, capture_output=True, text=True)
-                    info_out(f"Successfully converted '{path}' to '{out_file}'\n")
-                except subprocess.CalledProcessError as e:
-                    error_out(f"Conversion failed: {e}\n")
-                    info_out(f"FFmpeg output: {e.stdout}\n")
-                    error_out(f"FFmpeg: {e.stderr}\n")
-                except FileNotFoundError:
-                    error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
-            else:
-                info_out('File already exists skipping.\n')
+                        if not os.path.exists(path):
+                            error_out(f"Input file '{path}' not found.\n")
+                            return
+                        if not os.path.isfile(out_file):
+                            command = [
+                                'ffmpeg',
+                                '-i', path,
+                                '-acodec', 'pcm_s16le',
+                                '-ar', '44100', "-ac", "2",
+                                out_file
+                            ]
 
-            os.remove(path)
+                        else:
+                            info_out('File already exists skipping.\n')
+
+                    if command != "":
+                        try:
+                            subprocess.run(command, check=True, capture_output=True, text=True)
+                            info_out(f"Successfully converted '{path}' to '{out_file}'\n")
+                        except subprocess.CalledProcessError as e:
+                            error_out(f"Conversion failed: {e}\n")
+                            info_out(f"FFmpeg output: {e.stdout}\n")
+                            error_out(f"FFmpeg: {e.stderr}\n")
+                        except FileNotFoundError:
+                            error_out("FFmpeg not found. Please ensure FFmpeg is installed and in your system's PATH. \n")
+
+            except:
+                error_out("Failed to convert to selected format")
+
+            if 'm4a' not in extensions:
+                    os.remove(path)
 
     # Applies metadata
     def apply_metadata(self, path, artist, album, date, genre, video_id):
@@ -351,34 +348,6 @@ def get_in_path():
         error_out('No file selected using defualt csv (manual add)\n')
         input_path = "custom.csv"
 
-def select_download_option():
-    global download_options, mp3, wav
-
-    selected_option = download_options.get(download_options.curselection())
-
-    if selected_option == "mp3":
-        mp3 = True
-        wav = False
-        both = False
-        info_out("mp3 selected\n")
-
-    elif selected_option == "wav":
-        wav = True
-        mp3 = False
-        both = False
-        info_out("wav selected\n")
-
-    elif selected_option == "wav" and selected_option == "mp3":
-        both = True
-        wav = False
-        mp3 = False
-
-    else:
-        wav = False
-        mp3 = False
-        both = False
-        info_out("m4a selected\n")
-
 # Opens the options window (TODO)
 def open_options_window():
     global download_options
@@ -390,15 +359,15 @@ def open_options_window():
 
     options_menu_window.geometry("500x500")
 
-    download_options = tk.Listbox(options_menu_window, height=10, width=40, selectmode="single")
+    download_options_Label = Label(options_menu_window, text="Please select the format you want the songs downloaded in", fg = 'violet', bg = 'black')
+    download_options_Label.pack()
+
+    download_options = tk.Listbox(options_menu_window, height=10, width=40, selectmode="multiple")
     download_options.pack(pady=10)
 
     download_options.insert(tk.END, "m4a")
     download_options.insert(tk.END, "mp3")
     download_options.insert(tk.END, "wav")
-
-    select_download_option_button = Button(options_menu_window, text="select", command=select_download_option, fg = "violet", highlightbackground = "black")
-    select_download_option_button.pack()
 
 def open_download_folder():
     

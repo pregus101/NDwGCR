@@ -1,0 +1,11 @@
+subprocess
+logging
+io
+typing
+bs4
+urllib
+httpx==0.27
+youtube-search-python
+pytubefix
+mutagen
+platformdirs

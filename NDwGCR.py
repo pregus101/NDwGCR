@@ -386,6 +386,8 @@ def open_options_window():
     options_menu_window = tk.Toplevel(screen)
     options_menu_window.title("Options window")
 
+    options_menu_window.configure(bg="black")
+
     options_menu_window.geometry("500x500")
 
     download_options = tk.Listbox(options_menu_window, height=10, width=40, selectmode="single")

@@ -42,7 +42,7 @@ with open("custom.csv", "r+") as f:
     writer.writerow('')
 
 global custom_playlist
-input_path = "custom.csv"
+input_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
 
 class OnlineMusicEntry():
 
@@ -346,7 +346,7 @@ def get_in_path():
         info_out('File selected\n')
     else:
         error_out('No file selected using defualt csv (manual add)\n')
-        input_path = "custom.csv"
+        input_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
 
 # Opens the options window (TODO)
 def open_options_window():
@@ -422,7 +422,9 @@ def add_item():
         for i in range(0, 5):
             out.insert(5, "")
 
-        with open('custom.csv', 'a', newline='') as file:
+        csv_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
+
+        with open(csv_path, 'a', newline='') as file:
             writer = csv.writer(file)
 
             writer.writerow(out)
@@ -432,6 +434,8 @@ def add_item():
 
 # The command for removing a value from the CSV file and listbox
 def remove_item():
+    csv_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
+
     selected_indices = custom_playlist_screen_list.curselection()
 
     clear = []
@@ -439,7 +443,7 @@ def remove_item():
     for index in selected_indices:
         clear.append(custom_playlist_screen_list.get(index))  # Get value for each index
 
-    with open('custom.csv', 'r+') as file:
+    with open(csv_path, 'r+') as file:
         csv_reader = csv.reader(file)
         writer = csv.writer(file)
 
@@ -456,7 +460,7 @@ def remove_item():
                 except:
                     pass
 
-        with open("custom.csv", "r+") as f:
+        with open(csv_path, "r+") as f:
             f.truncate(0)
             writer = csv.writer(f)
             writer.writerow('')
@@ -471,6 +475,7 @@ def remove_item():
 
 # The command for clearing the custom CSV and playlist
 def clear_playlist():
+    csv_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
     size = custom_playlist_screen_list.size()
 
     while size != 0:
@@ -480,7 +485,7 @@ def clear_playlist():
             custom_playlist_screen_list.delete(i)
 
     # Clears the custom playlist CSV
-    with open("custom.csv", "r+") as f:
+    with open(csv_path, "r+") as f:
         f.truncate(0)
         writer = csv.writer(f)
         writer.writerow('')

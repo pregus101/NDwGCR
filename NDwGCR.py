@@ -44,58 +44,6 @@ with open("custom.csv", "r+") as f:
 global custom_playlist
 input_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
 
-class OnlineMusicEntry():
-
-    # TODO: Work on better source identification.
-    source: int
-
-    def __init__(self):
-        self.is_downloaded = False
-        
-    @staticmethod
-    def create_from_youtube_ID(ID) -> Self:
-        pass
-
-    @staticmethod
-    def create_from_spotify_ID(ID) -> Self:
-        pass
-
-    def download(self, path: str) -> None:
-        # ...
-        self.is_downloaded = True
-        return
-
-    def convert_m4a_to_mp3(self) -> None:
-        pass
-
-    def apply_metadata(self) -> None:
-        pass
-
-    def _apply_youtube_metadata(self) -> None:
-        pass
-
-    def _apply_spotify_metadata(self) -> None:
-        pass
-
-class ListOfMusicEntries():
-    
-    def __init__(self):
-        self.entry_list: list[OnlineMusicEntry] = []
-
-    # Appends a single online music entry or multiple if the url is a playlist or single video
-    def smart_append_from_url(self, path):
-        pass
-
-    def smart_append_from_cvs(self, path):
-        pass
-
-    def download_all(self, path: str):
-        for entry in self.entry_list:
-            try:
-                entry.download(path)
-            except Exception as e:
-                error_out(f"Exception downloading file: {e}")
-
 class Downloader():
     def __init__(self):
 

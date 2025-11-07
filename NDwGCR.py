@@ -1,6 +1,5 @@
 import os
 import subprocess
-import threading
 import logging
 import csv
 from io import BytesIO

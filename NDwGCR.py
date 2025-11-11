@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Clears the custom playlist csv and sets the default csv file to be the custom playlist one
-with open("custom.csv", "r+") as f:
+with open(os.path.dirname(os.path.abspath(__file__))+"/custom.csv", "r+", encoding='utf-8') as f:
     f.truncate(0)
     writer = csv.writer(f)
     writer.writerow('')
@@ -61,7 +61,7 @@ class Downloader():
         
         # Retrieves song data then searches for them
 
-        with open(input_path, 'r') as csv_file:
+        with open(input_path, 'r', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
 
             next(csv_reader)

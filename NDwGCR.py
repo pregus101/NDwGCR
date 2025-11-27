@@ -71,25 +71,28 @@ class Downloader():
             progress_bar['value']=0
 
             self.progress_of_bar = 0 
-
+            
             for song in csv_reader:
+                try:
+                    # Tell you what song it is on and how many you have left
+                    self.progress_of_bar +=1
 
-                # Tell you what song it is on and how many you have left
-                self.progress_of_bar +=1
-                out_data = song[1] + ' by ' + song[3] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
-                info_out(out_data)
+                    out_data = song[1] + ' by ' + song[3] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
+                    info_out(out_data)
 
-                # Gets the download url then downloads and converts it.
-                self.download_and_meta_url = self.search(song[1]+' '+song[3])
-                for element in self.download_and_meta_url:
-                    self.download(output_path, element['url'], song[3], song[2], song[4], song[10])
+                    # Gets the download url then downloads and converts it.
+                    self.download_and_meta_url = self.search(song[1]+' '+song[3])
+                    for element in self.download_and_meta_url:
+                        self.download(output_path, element['url'], song[3], song[2], song[4], song[10])
 
-                # updates loading bar
-                progress_bar['value']+=1
+                    # updates loading bar
+                    progress_bar['value']+=1
 
-                # updates screen
-                screen.update()
-
+                    # updates screen
+                    screen.update()
+                except:
+                    error_out("Failed to read song data")
+                    
     # Finds the url based off of the song name and artist
     def search(self, term):
         searcher = VideosSearch(term, 1)
@@ -111,6 +114,8 @@ class Downloader():
         try:
             stream = yt.streams.filter(only_audio=True).first()
             path_to_og = stream.download(path) # Optional: specify download path
+
+            print(path_to_og)
 
             # Applies meta_data
             self.apply_metadata(path_to_og, artist, album, date, genre, self.get_youtube_id(url))

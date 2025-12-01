@@ -92,7 +92,9 @@ class Downloader():
                     screen.update()
                 except:
                     error_out("Failed to read song data")
-                    
+                
+            progress_bar['value']+=1
+
     # Finds the url based off of the song name and artist
     def search(self, term):
         searcher = VideosSearch(term, 1)
@@ -178,12 +180,50 @@ class Downloader():
                                 'ffmpeg',
                                 '-i', path,
                                 '-acodec', 'pcm_s16le',
-                                '-ar', '44100', "-ac", "2",
+                                '-ar', '44800', "-ac", "2",
                                 out_file
                             ]
 
                         else:
                             info_out('File already exists skipping.\n')
+
+                    if extend == "flac":
+                        out_file = path[:-3] + "flac"
+
+                        if not os.path.exists(path):
+                            error_out(f"Input file '{path}' not found.\n")
+                            return
+                        if not os.path.isfile(out_file):
+                            command = [
+                                'ffmpeg',
+                                '-i', path,
+                                '-c:a', 'flac', 
+                                '-sample_fmt', 's32',
+                                out_file
+                            ]
+
+                    if extend == "AAC":
+                        out_file = path[:-3] + "AAC"
+
+                        if not os.path.exists(path):
+                            error_out(f"Input file '{path}' not found.\n")
+                            return
+                        if not os.path.isfile(out_file):
+                            command = [
+                                'ffmpeg',
+                                '-i', path, 
+                                '-c:a', 'aac',
+                                out_file
+                            ]
+
+                    if extend == "OGG":
+                        out_file = path[:-3] + "ogg"
+
+                        if not os.path.exists(path):
+                            error_out(f"Input file '{path}' not found.\n")
+                            return
+                        if not os.path.isfile(out_file):
+                            command = [ 'ffmpeg', '-i', path, '-c:a', 'libvorbis', '-qscale:a', '5', out_file]
 
                     if command != "":
                         try:
@@ -320,6 +360,9 @@ def open_options_window():
     download_options.insert(tk.END, "m4a")
     download_options.insert(tk.END, "mp3")
     download_options.insert(tk.END, "wav")
+    download_options.insert(tk.END, "flac")
+    download_options.insert(tk.END, "AAC")
+    download_options.insert(tk.END, "OGG")
 
 def open_download_folder():
     

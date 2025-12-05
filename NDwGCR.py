@@ -398,121 +398,107 @@ def warn_out(message: str):
     text_output_area.insert(tk.END, "[WARNING]: " + message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 
-global custom_playlist_screen_list, entry
+class Custom_Playlist_Window():
+    def __init__(self):
+        
+        self.song_list_length = 0
+        self.song_entries = []
+        self.artist_entries = []
+        self.album_entries = []
+        self.genre_entries = []
+        self.date_entries = []
+        self.remove_buttons = []
 
-# The command to add things to the Custom CSV
-def add_item():
-    global custom_playlist_screen_list, entry
+        # [TODO] Test if I really need to have this external frame (I don't think I do)
+        custom_playlist_screen = tk.Toplevel(screen)
+        custom_playlist_screen.title("Custom playlist window")
+        custom_playlist_screen.geometry("500x500")
 
-    item = entry.get()
+        custom_playlist_screen.configure(bg="black")
 
-    if item:
+        custom_list_frame = Frame(custom_playlist_screen)
+        custom_list_frame.pack(fill="both", expand=True)
 
-        out = item
+        scroll_list_canvas = Canvas(custom_list_frame, borderwidth=0, background="black")
+        scroll_list_canvas.pack(side="left", fill="both", expand=True)
 
-        out = out.split(",")
+        list_scrollbar = Scrollbar(custom_list_frame, orient="vertical", command=scroll_list_canvas.yview)
+        list_scrollbar.pack(side="right", fill="y")
 
-        out.insert(0, "")
+        scroll_list_canvas.config(yscrollcommand=list_scrollbar.set)
 
-        for i in range(0, 5):
-            out.insert(5, "")
+        self.interior_list_frame = Frame(scroll_list_canvas)
+        scroll_list_canvas.create_window((0,0), window=self.interior_list_frame, anchor="nw")
 
-        csv_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
+        self.interior_list_frame.grid_columnconfigure(0, weight=0)  
+        self.interior_list_frame.grid_columnconfigure(1, weight=0)  
+        self.interior_list_frame.grid_columnconfigure(2, weight=0)  
+        self.interior_list_frame.grid_columnconfigure(3, weight=0)  
+        self.interior_list_frame.grid_columnconfigure(4, weight=0)  
+        self.interior_list_frame.grid_columnconfigure(5, weight=0) 
+        self.interior_list_frame.grid_columnconfigure(6, weight=1)
 
-        with open(csv_path, 'a', newline='') as file:
-            writer = csv.writer(file)
+        custom_explain_label = Label(self.interior_list_frame, text="Please input the name, artist, album, genre,\n and date released.\n If you don't know all this info\n just leave the box blank")
+        custom_explain_label.grid(row=0, column=6)
 
-            writer.writerow(out)
+        custom_song = Label(self.interior_list_frame, text="Song Name")
+        custom_song.grid(row=1, column=0)
 
-        custom_playlist_screen_list.insert(tk.END, item)
-        entry.delete(0, tk.END)
+        custom_artist = Label(self.interior_list_frame, text="Artist")
+        custom_artist.grid(row=1, column=1)
 
-# The command for removing a value from the CSV file and listbox
-def remove_item():
-    csv_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
+        custom_album = Label(self.interior_list_frame, text="Album")
+        custom_album.grid(row=1, column=2)
 
-    selected_indices = custom_playlist_screen_list.curselection()
+        custom_genre = Label(self.interior_list_frame, text="Genre")
+        custom_genre.grid(row=1, column=3)
+        
+        custom_date = Label(self.interior_list_frame, text="Date")
+        custom_date.grid(row=1, column=4)
 
-    clear = []
+        self.add_button = Button(self.interior_list_frame, text="Add", command= self.add)
+        self.add_button.grid(row=self.song_list_length+2, column=6)
 
-    for index in selected_indices:
-        clear.append(custom_playlist_screen_list.get(index))  # Get value for each index
+    def add(self):
+        self.song_entries.append(Entry(self.interior_list_frame))
+        self.artist_entries.append(Entry(self.interior_list_frame))
+        self.album_entries.append(Entry(self.interior_list_frame))
+        self.genre_entries.append(Entry(self.interior_list_frame))
+        self.date_entries.append(Entry(self.interior_list_frame))
+        self.remove_buttons.append(Button(self.interior_list_frame ,text="Remove", command=self.remove))
 
-    with open(csv_path, 'r+') as file:
-        csv_reader = csv.reader(file)
-        writer = csv.writer(file)
+        self.song_entries[self.song_list_length].grid(row=self.song_list_length+2, column=0)
+        self.artist_entries[self.song_list_length].grid(row=self.song_list_length+2, column=1)
+        self.album_entries[self.song_list_length].grid(row=self.song_list_length+2, column=2)
+        self.genre_entries[self.song_list_length].grid(row=self.song_list_length+2, column=3)
+        self.date_entries[self.song_list_length].grid(row=self.song_list_length+2, column=4)
+        self.remove_buttons[self.song_list_length].grid(row=self.song_list_length+2, column=5)
 
-        write = []
+        self.song_list_length += 1
 
-        for row in csv_reader:
-            for value in clear:
-                try:
-                    comparitve_value1 = [row[1], row[2], row[3], row[4], row[10]]
-                    comparitve_value2 = value.split(",")
-                    if comparitve_value1 != comparitve_value2:
-                        write.append(row)
-                        print(write)
-                except:
-                    pass
+        self.add_button.grid(row=self.song_list_length+2)
 
-        with open(csv_path, "r+") as f:
-            f.truncate(0)
-            writer = csv.writer(f)
-            writer.writerow('')
+    def remove(self):
+        self.song_list_length -= 1
+        self.add_button.grid(row=self.song_list_length+2)
 
-        writer = csv.writer(file)
-        for row in write:
-            print(write, row)
-            writer.writerow(row)
+        self.song_entries[self.song_list_length].destroy()
+        self.song_entries.remove(self.song_entries[self.song_list_length])
 
-    for index in selected_indices[::-1]:  # Iterate in reverse order
-        custom_playlist_screen_list.delete(index)
+        self.artist_entries[self.song_list_length].destroy()
+        self.artist_entries.remove(self.artist_entries[self.song_list_length])
 
-# The command for clearing the custom CSV and playlist
-def clear_playlist():
-    csv_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
-    size = custom_playlist_screen_list.size()
+        self.album_entries[self.song_list_length].destroy()
+        self.album_entries.remove(self.album_entries[self.song_list_length])
 
-    while size != 0:
-        size = custom_playlist_screen_list.size()
+        self.genre_entries[self.song_list_length].destroy()
+        self.genre_entries.remove(self.genre_entries[self.song_list_length])
 
-        for i in range(0, size):
-            custom_playlist_screen_list.delete(i)
+        self.date_entries[self.song_list_length].destroy()
+        self.date_entries.remove(self.date_entries[self.song_list_length])
 
-    # Clears the custom playlist CSV
-    with open(csv_path, "r+") as f:
-        f.truncate(0)
-        writer = csv.writer(f)
-        writer.writerow('')
-
-# Defines the things in a custom CSV
-def custom_playlist():
-    global custom_playlist_screen_list, entry
-
-    custom_playlist_screen = tk.Toplevel(screen)
-    custom_playlist_screen.title("Custom playlist window")
-    custom_playlist_screen.geometry("500x500")
-
-    custom_playlist_screen.configure(bg="black")
-
-    custom_play_text = Label(custom_playlist_screen, text="Please input your songs like this\n If you don't know just leave a blank space in between the commas \n Name, Album, Artist, Date, Genre", fg = 'violet', bg = 'black')
-    custom_play_text.pack()
-
-    entry = tk.Entry(custom_playlist_screen, width=40)
-    entry.pack(pady=10)
-
-    add_button = tk.Button(custom_playlist_screen, text="add item to the custom playlist", command=add_item, fg = "violet", highlightbackground = "black")
-    add_button.pack()
-
-    custom_playlist_screen_list = tk.Listbox(custom_playlist_screen, height=10, width=40, selectmode="multiple")
-    custom_playlist_screen_list.pack(pady=10)
-
-    add_button = tk.Button(custom_playlist_screen, text="remove item from the custom playlist", command=remove_item, fg = "violet", highlightbackground = "black")
-    add_button.pack()
-
-    add_button = tk.Button(custom_playlist_screen, text="Clear the custom playlist", command=clear_playlist, fg = "violet", highlightbackground = "black")
-    add_button.pack()
-
+        self.remove_buttons[self.song_list_length].destroy()
+        self.remove_buttons.remove(self.remove_buttons[self.song_list_length])
 
 
 if __name__ == "__main__":
@@ -539,7 +525,7 @@ if __name__ == "__main__":
     # download_as_mp3_label.grid(row=5)
 
     # Option button for downloading as and m4a or mp3
-    mp3_option_button = Button(text="Open the options window", fg = "violet", highlightbackground = "black", command = open_options_window, relief="sunken")
+    mp3_option_button = Button(text="Open the options window", fg = "violet", highlightbackground = "black", command = open_options_window) #, relief="sunken"
     mp3_option_button.grid(row=6)
 
     # Button that opens download folder
@@ -574,7 +560,7 @@ if __name__ == "__main__":
     download_button = Button(text = "Download", fg = "violet", highlightbackground = "black", command = Downloader)
     download_button.grid(row=4)
 
-    open_window_button = Button(text = "Manual Add", fg = "violet", highlightbackground = "black", command = custom_playlist)
+    open_window_button = Button(text = "Manual Add", fg = "violet", highlightbackground = "black", command = Custom_Playlist_Window)
     open_window_button.grid(row=8)
 
     # Main screen loop

@@ -41,8 +41,9 @@ with open(os.path.dirname(os.path.abspath(__file__))+"/custom.csv", "r+", encodi
     writer = csv.writer(f)
     writer.writerow(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "23"])
 
-global custom_playlist
+global custom_playlist, exportify_or_tune
 input_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
+exportify_or_tune = "exportify"
 
 class Downloader():
     def __init__(self):
@@ -72,19 +73,30 @@ class Downloader():
             progress_bar['value']=0
 
             self.progress_of_bar = 0 
+
+            global exportify_or_tune
             
             for song in csv_reader:
                 try:
                     # Tell you what song it is on and how many you have left
                     self.progress_of_bar +=1
 
-                    out_data = song[1] + ' by ' + song[3] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
-                    info_out(out_data)
+                    if exportify_or_tune == "exportify"
+                        out_data = song[1] + ' by ' + song[3] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
+                        info_out(out_data)
 
-                    # Gets the download url then downloads and converts it.
-                    self.download_and_meta_url = self.search(song[1]+' '+song[3])
-                    for element in self.download_and_meta_url:
-                        self.download(output_path, element['url'], song[3], song[2], song[4], song[10])
+                        # Gets the download url then downloads and converts it.
+                        self.download_and_meta_url = self.search(song[1]+' '+song[3])
+                        for element in self.download_and_meta_url:
+                            self.download(output_path, element['url'], song[3], song[2], song[4], song[10])
+                    else:
+                        out_data = song[0] + ' by ' + song[2] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
+                        info_out(out_data)
+
+                        # Gets the download url then downloads and converts it.
+                        self.download_and_meta_url = self.search(song[0]+' '+song[2])
+                        for element in self.download_and_meta_url:
+                            self.download(output_path, element['url'], song[2], song[3], "", "")
 
                     # updates loading bar
                     progress_bar['value']+=1
@@ -343,7 +355,7 @@ def get_in_path():
 
 # Opens the options window (TODO)
 def open_options_window():
-    global download_options
+    global download_options, exportify_or_tune_button
 
     options_menu_window = tk.Toplevel(screen)
     options_menu_window.title("Options window")
@@ -364,6 +376,22 @@ def open_options_window():
     download_options.insert(tk.END, "flac")
     download_options.insert(tk.END, "AAC")
     download_options.insert(tk.END, "OGG")
+
+    # I will probs make this better/resemble the above option picker
+    exportify_or_tune_label = Label(options_menu_window, text="Exporify or Tune my Music csv")
+    exportify_or_tune_label.pack()
+
+    exportify_or_tune_button = Button(options_menu_window, text="Exportify", command=switch_csv)
+    exportify_or_tune_button.pack()
+
+def switch_csv():
+    global exportify_or_tune, exportify_or_tune_button
+    if exportify_or_tune == "exportify":
+        exportify_or_tune_button.config(text="Tune my Music")
+        exportify_or_tune = "Tune my Music"
+    else:
+        exportify_or_tune_button.config(text="Exportify")
+        exportify_or_tune = "exportify"
 
 def open_download_folder():
     

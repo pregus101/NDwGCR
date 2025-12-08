@@ -2,6 +2,7 @@ import os
 import subprocess
 import logging
 import csv
+import pandas as pd
 from io import BytesIO
 from typing import Self
 import webbrowser
@@ -38,7 +39,7 @@ logger.setLevel(logging.DEBUG)
 with open(os.path.dirname(os.path.abspath(__file__))+"/custom.csv", "r+", encoding='utf-8') as f:
     f.truncate(0)
     writer = csv.writer(f)
-    writer.writerow('')
+    writer.writerow(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"])
 
 global custom_playlist
 input_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
@@ -401,6 +402,7 @@ def warn_out(message: str):
 class Custom_Playlist_Window():
     def __init__(self):
         
+        # Initializes the lists for this window
         self.song_list_length = 0
         self.song_entries = []
         self.artist_entries = []
@@ -430,17 +432,14 @@ class Custom_Playlist_Window():
         self.interior_list_frame = Frame(scroll_list_canvas)
         scroll_list_canvas.create_window((0,0), window=self.interior_list_frame, anchor="nw")
 
-        self.interior_list_frame.grid_columnconfigure(0, weight=0)  
-        self.interior_list_frame.grid_columnconfigure(1, weight=0)  
-        self.interior_list_frame.grid_columnconfigure(2, weight=0)  
-        self.interior_list_frame.grid_columnconfigure(3, weight=0)  
-        self.interior_list_frame.grid_columnconfigure(4, weight=0)  
-        self.interior_list_frame.grid_columnconfigure(5, weight=0) 
-        self.interior_list_frame.grid_columnconfigure(6, weight=1)
+        # Centers the text and other stuff. (Applies weight to all relevant columns)
+        for i in range(7):
+            self.interior_list_frame.grid_columnconfigure(i, weight=1)
+        self.interior_list_frame.grid_columnconfigure(7, weight=1)
 
-        custom_explain_label = Label(self.interior_list_frame, text="Please input the name, artist, album, genre,\n and date released.\n If you don't know all this info\n just leave the box blank")
-        custom_explain_label.grid(row=0, column=6)
-
+        custom_explain_label = Label(self.interior_list_frame, text="Please input the name, artist, album, genre,\n and date released.\n If you don't know all this info\n just leave the box blank", justify=tk.CENTER)
+        custom_explain_label.grid(row=0, column=0, columnspan=5, sticky="n")
+        
         custom_song = Label(self.interior_list_frame, text="Song Name")
         custom_song.grid(row=1, column=0)
 
@@ -457,7 +456,10 @@ class Custom_Playlist_Window():
         custom_date.grid(row=1, column=4)
 
         self.add_button = Button(self.interior_list_frame, text="Add", command= self.add)
-        self.add_button.grid(row=self.song_list_length+2, column=6)
+        self.add_button.grid(row=self.song_list_length+2, column=0, columnspan=5, sticky="s")
+
+        self.save_button = Button(self.interior_list_frame, text="Save", command = self.save)
+        self.save_button.grid(row=self.song_list_length+3, column=0, columnspan=5, sticky="s")
 
     def add(self):
         self.song_entries.append(Entry(self.interior_list_frame))
@@ -476,7 +478,8 @@ class Custom_Playlist_Window():
 
         self.song_list_length += 1
 
-        self.add_button.grid(row=self.song_list_length+2)
+        self.add_button.grid(row=self.song_list_length+2, sticky="s")
+        self.save_button.grid(row=self.song_list_length+3, column=0, columnspan=5, sticky="s")
 
     def remove(self):
         self.song_list_length -= 1
@@ -500,6 +503,33 @@ class Custom_Playlist_Window():
         self.remove_buttons[self.song_list_length].destroy()
         self.remove_buttons.remove(self.remove_buttons[self.song_list_length])
 
+    def save(self):
+        self.songs = []
+        self.artists = []
+        self.albums = []
+        self.genres = []
+        self.dates = []
+
+        for song_entry in self.song_entries:
+            self.songs.append(song_entry.get())
+
+        for artist_entry in self.artist_entries:
+            self.artists.append(artist_entry.get())
+
+        for album_entry in self.album_entries:
+            self.albums.append(album_entry.get())
+
+        for genre_entry in self.genre_entries:
+            self.genres.append(genre_entry.get())
+
+        for date_entry in self.date_entries:
+            self.dates.append(date_entry.get())
+
+        custom_csv = pd.read_csv(os.path.dirname(os.path.abspath(__file__))+"/custom.csv")
+        for i in range(self.song_list_length):
+            custom_csv.loc[i, 1] = self.songs[i]
+            print(custom_csv)
+        custom_csv.to_csv(os.path.dirname(os.path.abspath(__file__))+"/custom.csv")
 
 if __name__ == "__main__":
 

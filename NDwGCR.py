@@ -430,7 +430,9 @@ class Custom_Playlist_Window():
         scroll_list_canvas.config(yscrollcommand=list_scrollbar.set)
 
         self.interior_list_frame = Frame(scroll_list_canvas)
-        scroll_list_canvas.create_window((0,0), window=self.interior_list_frame, anchor="nw")
+        self.canvas_window_id = scroll_list_canvas.create_window((0,0), window=self.interior_list_frame, anchor="nw")
+
+        scroll_list_canvas.bind('<Configure>', custom_playlist_screen.winfo_width())
 
         # Centers the text and other stuff. (Applies weight to all relevant columns)
         for i in range(7):
@@ -467,7 +469,7 @@ class Custom_Playlist_Window():
         self.album_entries.append(Entry(self.interior_list_frame))
         self.genre_entries.append(Entry(self.interior_list_frame))
         self.date_entries.append(Entry(self.interior_list_frame))
-        self.remove_buttons.append(Button(self.interior_list_frame ,text="Remove", command=self.remove))
+        self.remove_buttons.append(Button(self.interior_list_frame ,text="Remove", command=lambda: self.remove()))
 
         self.song_entries[self.song_list_length].grid(row=self.song_list_length+2, column=0)
         self.artist_entries[self.song_list_length].grid(row=self.song_list_length+2, column=1)

@@ -39,7 +39,7 @@ logger.setLevel(logging.DEBUG)
 with open(os.path.dirname(os.path.abspath(__file__))+"/custom.csv", "r+", encoding='utf-8') as f:
     f.truncate(0)
     writer = csv.writer(f)
-    writer.writerow(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"])
+    writer.writerow(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "23"])
 
 global custom_playlist
 input_path = os.path.dirname(os.path.abspath(__file__))+"/custom.csv"
@@ -527,9 +527,13 @@ class Custom_Playlist_Window():
 
         custom_csv = pd.read_csv(os.path.dirname(os.path.abspath(__file__))+"/custom.csv")
         for i in range(self.song_list_length):
-            custom_csv.loc[i, 1] = self.songs[i]
-            print(custom_csv)
-        custom_csv.to_csv(os.path.dirname(os.path.abspath(__file__))+"/custom.csv")
+            custom_csv.loc[i, "1"] = self.songs[i]
+            custom_csv.loc[i, "3"] = self.artists[i]
+            custom_csv.loc[i, "2"] = self.albums[i]
+            custom_csv.loc[i, "10"] = self.genres[i]
+            custom_csv.loc[i, "4"] = self.dates[i]
+
+        custom_csv.to_csv(os.path.dirname(os.path.abspath(__file__))+"/custom.csv", index=False)
 
 if __name__ == "__main__":
 

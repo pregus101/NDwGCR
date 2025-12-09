@@ -370,6 +370,7 @@ def open_options_window():
     download_options = tk.Listbox(options_menu_window, height=10, width=40, selectmode="multiple")
     download_options.pack(pady=10)
 
+    # Extension options
     download_options.insert(tk.END, "m4a")
     download_options.insert(tk.END, "mp3")
     download_options.insert(tk.END, "wav")
@@ -377,13 +378,14 @@ def open_options_window():
     download_options.insert(tk.END, "AAC")
     download_options.insert(tk.END, "OGG")
 
-    # I will probs make this better/resemble the above option picker
+    # I will probs make this better/resemble the above option picker. This is the setting for the csv reading config.
     exportify_or_tune_label = Label(options_menu_window, text="Exporify or Tune my Music csv", fg = 'violet', bg = 'black')
     exportify_or_tune_label.pack()
 
     exportify_or_tune_button = Button(options_menu_window, text="Exportify", command=switch_csv, fg = "violet", highlightbackground = "black")
     exportify_or_tune_button.pack()
 
+# This is the command for switching the reading config
 def switch_csv():
     global exportify_or_tune, exportify_or_tune_button
     if exportify_or_tune == "exportify":
@@ -395,8 +397,9 @@ def switch_csv():
         exportify_or_tune = "exportify"
         info_out("Exportify")
 
+#Opens the download folder
 def open_download_folder():
-    
+    # [TODO] I mean it works across linux mac and windows but I'm probs going to switch it so that it actually checks the OS
     # Tries opening the folder in a new finder window on mac
     if not os.path.isdir(output_path):
         error_out(f"Folder '{output_path}' does not exist.")
@@ -429,6 +432,7 @@ def warn_out(message: str):
     text_output_area.insert(tk.END, "[WARNING]: " + message + "\n")
     text_output_area.see(tk.END) # Auto-scroll to the end
 
+# Opens a new window that contains the custom playlist (Incomplete. Need to fix the gui and like I think it's still bugging on windows)
 class Custom_Playlist_Window():
     def __init__(self):
         
@@ -493,6 +497,7 @@ class Custom_Playlist_Window():
         self.save_button = Button(self.interior_list_frame, text="Save", command = self.save)
         self.save_button.grid(row=self.song_list_length+3, column=0, columnspan=5, sticky="s")
 
+    #Adds a row
     def add(self):
         self.song_entries.append(Entry(self.interior_list_frame))
         self.artist_entries.append(Entry(self.interior_list_frame))
@@ -513,6 +518,7 @@ class Custom_Playlist_Window():
         self.add_button.grid(row=self.song_list_length+2, sticky="s")
         self.save_button.grid(row=self.song_list_length+3, column=0, columnspan=5, sticky="s")
 
+    #Removes the most recent row (I'm going to try and make it so it deletes the row it's on but that might be a tad bit difficult)
     def remove(self):
         self.song_list_length -= 1
         self.add_button.grid(row=self.song_list_length+2)
@@ -535,6 +541,7 @@ class Custom_Playlist_Window():
         self.remove_buttons[self.song_list_length].destroy()
         self.remove_buttons.remove(self.remove_buttons[self.song_list_length])
 
+    # Saves the info to the custom csv [TODO] make it so you can save it to a seperate csv file.
     def save(self):
         self.songs = []
         self.artists = []

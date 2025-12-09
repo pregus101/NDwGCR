@@ -81,7 +81,7 @@ class Downloader():
                     # Tell you what song it is on and how many you have left
                     self.progress_of_bar +=1
 
-                    if exportify_or_tune == "exportify"
+                    if exportify_or_tune == "exportify":
                         out_data = song[1] + ' by ' + song[3] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
                         info_out(out_data)
 
@@ -90,13 +90,13 @@ class Downloader():
                         for element in self.download_and_meta_url:
                             self.download(output_path, element['url'], song[3], song[2], song[4], song[10])
                     else:
-                        out_data = song[0] + ' by ' + song[2] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
+                        out_data = song[0] + ' by ' + song[1] + ' ' + str(self.progress_of_bar) + '/' + str(self.song_count) + '\n'
                         info_out(out_data)
 
                         # Gets the download url then downloads and converts it.
-                        self.download_and_meta_url = self.search(song[0]+' '+song[2])
+                        self.download_and_meta_url = self.search(song[0]+' '+song[1])
                         for element in self.download_and_meta_url:
-                            self.download(output_path, element['url'], song[2], song[3], "", "")
+                            self.download(output_path, element['url'], song[1], song[2], "", "")
 
                     # updates loading bar
                     progress_bar['value']+=1
@@ -389,9 +389,11 @@ def switch_csv():
     if exportify_or_tune == "exportify":
         exportify_or_tune_button.config(text="Tune my Music")
         exportify_or_tune = "Tune my Music"
+        info_out("Tune my Music selected")
     else:
         exportify_or_tune_button.config(text="Exportify")
         exportify_or_tune = "exportify"
+        info_out("Exportify")
 
 def open_download_folder():
     

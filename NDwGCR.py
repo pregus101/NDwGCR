@@ -378,10 +378,10 @@ def open_options_window():
     download_options.insert(tk.END, "OGG")
 
     # I will probs make this better/resemble the above option picker
-    exportify_or_tune_label = Label(options_menu_window, text="Exporify or Tune my Music csv")
+    exportify_or_tune_label = Label(options_menu_window, text="Exporify or Tune my Music csv", fg = 'violet', bg = 'black')
     exportify_or_tune_label.pack()
 
-    exportify_or_tune_button = Button(options_menu_window, text="Exportify", command=switch_csv)
+    exportify_or_tune_button = Button(options_menu_window, text="Exportify", command=switch_csv, fg = "violet", highlightbackground = "black")
     exportify_or_tune_button.pack()
 
 def switch_csv():

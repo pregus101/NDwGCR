@@ -3,6 +3,7 @@
 import logging
 import csv
 import threading
+import time
 from pathlib import Path
 from typing import List, Dict, Callable, Optional
 
@@ -32,6 +33,8 @@ class NDwGCRUI:
         self.config = Config()
         self.downloader = MusicDownloader(self.config)
         self.download_thread: Optional[threading.Thread] = None
+        self.download_start_time: Optional[float] = None
+        self.time_estimate_label: Optional[Label] = None
         
         self._setup_window()
         self._create_widgets()
@@ -51,7 +54,7 @@ class NDwGCRUI:
         title = Label(
             self.root,
             text="Welcome\nSelect your CSV file or use Manual Add\nto build a custom playlist",
-            fg='violet', bg='black', font=("Arial", 10)
+            fg='violet', bg='black', font=("Arial", 12)
         )
         title.grid(row=0, pady=10)
         
@@ -87,7 +90,11 @@ class NDwGCRUI:
         )
         manual_add_btn.grid(row=5, pady=5)
         
-        # Progress bar
+        # Progress bar and time estimate frame
+        progress_frame = Frame(self.root, bg='black')
+        progress_frame.grid(row=6, pady=10, padx=10, sticky='ew')
+        progress_frame.grid_columnconfigure(0, weight=1)
+        
         style = ttk.Style()
         style.theme_use('clam')
         style.configure(
@@ -95,10 +102,15 @@ class NDwGCRUI:
             foreground='black', background='violet'
         )
         self.progress_bar = ttk.Progressbar(
-            self.root, orient="horizontal",
+            progress_frame, orient="horizontal",
             style='violet.Horizontal.TProgressbar', length=300
         )
-        self.progress_bar.grid(row=6, pady=10)
+        self.progress_bar.grid(row=0, column=0, sticky='ew')
+        
+        self.time_estimate_label = Label(
+            progress_frame, text="", fg='violet', bg='black', font=("Arial", 9)
+        )
+        self.time_estimate_label.grid(row=1, column=0, sticky='w')
         
         # Output text area
         self.text_output = Text(
@@ -209,6 +221,7 @@ class NDwGCRUI:
             self._log_info(f"Starting download of {len(songs)} songs...")
             self.progress_bar.config(maximum=len(songs))
             self.progress_bar['value'] = 0
+            self.download_start_time = time.time()
             
             def progress_callback(current: int, total: int, song_info: Dict) -> None:
                 self.progress_bar['value'] = current
@@ -217,6 +230,19 @@ class NDwGCRUI:
                 self._log_info(
                     f"Downloading: {song_name} by {artist_name} ({current}/{total})"
                 )
+                
+                # Calculate time estimate
+                if self.download_start_time and current > 0:
+                    elapsed_seconds = time.time() - self.download_start_time
+                    avg_time_per_item = elapsed_seconds / current
+                    remaining_items = total - current
+                    estimated_remaining_seconds = avg_time_per_item * remaining_items
+                    
+                    time_estimate_text = self._format_time_estimate(
+                        estimated_remaining_seconds, current, total
+                    )
+                    self.time_estimate_label.config(text=time_estimate_text)
+                
                 self.root.update()
             
             def error_callback(error_msg: str) -> None:
@@ -229,6 +255,7 @@ class NDwGCRUI:
             )
             
             self._log_info("Download complete!")
+            self.time_estimate_label.config(text="")
             
         except Exception as e:
             self._log_error(f"Download failed: {e}")
@@ -289,6 +316,32 @@ class NDwGCRUI:
         logger.error(message)
         self.text_output.insert(tk.END, f"[ERROR]: {message}\n")
         self.text_output.see(tk.END)
+    
+    def _format_time_estimate(self, seconds: float, current: int, total: int) -> str:
+        """Format time estimate in readable format.
+        
+        Args:
+            seconds: Estimated remaining seconds.
+            current: Current item number.
+            total: Total number of items.
+            
+        Returns:
+            Formatted time estimate string.
+        """
+        items_remaining = total - current
+        
+        if seconds < 60:
+            time_str = f"{int(seconds)}s"
+        elif seconds < 3600:
+            minutes = int(seconds / 60)
+            secs = int(seconds % 60)
+            time_str = f"{minutes}m {secs}s"
+        else:
+            hours = int(seconds / 3600)
+            minutes = int((seconds % 3600) / 60)
+            time_str = f"{hours}h {minutes}m"
+        
+        return f"Time remaining: ~{time_str} ({items_remaining} songs left)"
 
 
 class OptionsWindow:

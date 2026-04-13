@@ -23,18 +23,20 @@ logger = logging.getLogger(__name__)
 class NDwGCRUI:
     """Main GUI for NDwGCR application."""
     
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: tk.Tk) -> None:
         """Initialize the UI.
         
         Args:
             root: Tkinter root window.
         """
-        self.root = root
-        self.config = Config()
-        self.downloader = MusicDownloader(self.config)
+        self.root: tk.Tk = root
+        self.config: Config = Config()
+        self.downloader: MusicDownloader = MusicDownloader(self.config)
         self.download_thread: Optional[threading.Thread] = None
         self.download_start_time: Optional[float] = None
         self.time_estimate_label: Optional[Label] = None
+        self.progress_bar: Optional[ttk.Progressbar] = None
+        self.text_output: Optional[Text] = None
         
         self._setup_window()
         self._create_widgets()
@@ -132,7 +134,7 @@ class NDwGCRUI:
     
     def _initialize_csv(self) -> None:
         """Initialize the custom CSV file."""
-        csv_path = self.config.app_path / "custom.csv"
+        csv_path: Path = self.config.app_path / "custom.csv"
         try:
             with open(csv_path, 'r', encoding='utf-8') as f:
                 # Check if file has content
@@ -145,7 +147,7 @@ class NDwGCRUI:
     
     def _write_empty_csv(self, csv_path: Path) -> None:
         """Create empty CSV file with headers."""
-        headers = [str(i) for i in range(24)]
+        headers: List[str] = [str(i) for i in range(24)]
         try:
             with open(csv_path, 'w', encoding='utf-8') as f:
                 writer = csv.writer(f)
@@ -156,7 +158,7 @@ class NDwGCRUI:
     
     def _get_input_path(self) -> None:
         """Let user select input CSV file."""
-        path = filedialog.askopenfilename(
+        path: str = filedialog.askopenfilename(
             filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
         )
         if path:
@@ -167,7 +169,7 @@ class NDwGCRUI:
     
     def _get_output_path(self) -> None:
         """Let user select output directory."""
-        path = filedialog.askdirectory()
+        path: str = filedialog.askdirectory()
         if path:
             self.config.set_output_path(path)
             self._log_info("Output folder selected")
@@ -213,7 +215,7 @@ class NDwGCRUI:
     def _perform_download(self) -> None:
         """Execute the download process."""
         try:
-            songs = self._read_csv_file()
+            songs: List[Dict[str, str]] = self._read_csv_file()
             if not songs:
                 self._log_error("No songs found in CSV file")
                 return
@@ -223,22 +225,22 @@ class NDwGCRUI:
             self.progress_bar['value'] = 0
             self.download_start_time = time.time()
             
-            def progress_callback(current: int, total: int, song_info: Dict) -> None:
+            def progress_callback(current: int, total: int, song_info: Dict[str, str]) -> None:
                 self.progress_bar['value'] = current
-                song_name = song_info.get('title', 'Unknown')
-                artist_name = song_info.get('artist', 'Unknown')
+                song_name: str = song_info.get('title', 'Unknown')
+                artist_name: str = song_info.get('artist', 'Unknown')
                 self._log_info(
                     f"Downloading: {song_name} by {artist_name} ({current}/{total})"
                 )
                 
                 # Calculate time estimate
                 if self.download_start_time and current > 0:
-                    elapsed_seconds = time.time() - self.download_start_time
-                    avg_time_per_item = elapsed_seconds / current
-                    remaining_items = total - current
-                    estimated_remaining_seconds = avg_time_per_item * remaining_items
+                    elapsed_seconds: float = time.time() - self.download_start_time
+                    avg_time_per_item: float = elapsed_seconds / current
+                    remaining_items: int = total - current
+                    estimated_remaining_seconds: float = avg_time_per_item * remaining_items
                     
-                    time_estimate_text = self._format_time_estimate(
+                    time_estimate_text: str = self._format_time_estimate(
                         estimated_remaining_seconds, current, total
                     )
                     self.time_estimate_label.config(text=time_estimate_text)
@@ -261,13 +263,13 @@ class NDwGCRUI:
             self._log_error(f"Download failed: {e}")
             logger.exception("Download error:")
     
-    def _read_csv_file(self) -> List[Dict]:
+    def _read_csv_file(self) -> List[Dict[str, str]]:
         """Read songs from CSV file.
         
         Returns:
             List of song dictionaries.
         """
-        songs = []
+        songs: List[Dict[str, str]] = []
         try:
             with open(self.config.input_path, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f)
@@ -297,6 +299,7 @@ class NDwGCRUI:
                         })
                 
                 return [s for s in songs if s.get('title') and s.get('artist')]
+                
                 
         except FileNotFoundError:
             self._log_error(f"CSV file not found: {self.config.input_path}")
@@ -328,16 +331,16 @@ class NDwGCRUI:
         Returns:
             Formatted time estimate string.
         """
-        items_remaining = total - current
+        items_remaining: int = total - current
         
         if seconds < 60:
-            time_str = f"{int(seconds)}s"
+            time_str: str = f"{int(seconds)}s"
         elif seconds < 3600:
-            minutes = int(seconds / 60)
-            secs = int(seconds % 60)
+            minutes: int = int(seconds / 60)
+            secs: int = int(seconds % 60)
             time_str = f"{minutes}m {secs}s"
         else:
-            hours = int(seconds / 3600)
+            hours: int = int(seconds / 3600)
             minutes = int((seconds % 3600) / 60)
             time_str = f"{hours}h {minutes}m"
         
@@ -347,18 +350,18 @@ class NDwGCRUI:
 class OptionsWindow:
     """Download options dialog."""
     
-    def __init__(self, parent: tk.Tk, config: Config):
+    def __init__(self, parent: tk.Tk, config: Config) -> None:
         """Initialize options window.
         
         Args:
             parent: Parent window.
             config: Configuration object.
         """
-        self.config = config
+        self.config: Config = config
         
-        self.window = tk.Toplevel(parent)
+        self.window: tk.Toplevel = tk.Toplevel(parent)
         self.window.title("Download Options")
-        self.window.geometry("500x300")
+        self.window.geometry("550x500")
         self.window.configure(bg="black")
         
         # Format selection
@@ -367,7 +370,7 @@ class OptionsWindow:
             fg='violet', bg='black', font=("Arial", 10)
         ).pack(pady=10)
         
-        self.format_listbox = tk.Listbox(
+        self.format_listbox: tk.Listbox = tk.Listbox(
             self.window, height=6, width=40,
             selectmode="multiple", bg='black', fg='violet'
         )
@@ -382,7 +385,7 @@ class OptionsWindow:
             fg='violet', bg='black', font=("Arial", 10)
         ).pack(pady=10)
         
-        self.mode_var = tk.StringVar(value=self.config.csv_mode)
+        self.mode_var: tk.StringVar = tk.StringVar(value=self.config.csv_mode)
         
         tk.Radiobutton(
             self.window, text="Exportify", variable=self.mode_var,
@@ -394,7 +397,60 @@ class OptionsWindow:
             value="tune_my_music", bg='black', fg='violet'
         ).pack()
         
-        # Save button
+        # Quality/Speed preset selection
+        Label(
+            self.window, text="Conversion Quality (speed/quality tradeoff)",
+            fg='violet', bg='black', font=("Arial", 10)
+        ).pack(pady=10)
+        
+        self.quality_var: tk.StringVar = tk.StringVar(value=self.config.quality_preset)
+        
+        tk.Radiobutton(
+            self.window, text="Maximum (96kHz, lossless compression, studio grade)", variable=self.quality_var,
+            value="maximum", bg='black', fg='violet'
+        ).pack()
+        
+        tk.Radiobutton(
+            self.window, text="High (48kHz, best quality, slower)", variable=self.quality_var,
+            value="high", bg='black', fg='violet'
+        ).pack()
+        
+        tk.Radiobutton(
+            self.window, text="Medium (44.1kHz, balanced)", variable=self.quality_var,
+            value="medium", bg='black', fg='violet'
+        ).pack()
+        
+        tk.Radiobutton(
+            self.window, text="Fast (32-44.1kHz, lower quality, 2-3x faster)", variable=self.quality_var,
+            value="fast", bg='black', fg='violet'
+        ).pack()
+        
+        # Skip cover art checkbox
+        self.skip_cover_var: tk.BooleanVar = tk.BooleanVar(value=self.config.skip_cover_art)
+        tk.Checkbutton(
+            self.window, text="Skip cover art (faster)", variable=self.skip_cover_var,
+            bg='black', fg='violet'
+        ).pack(pady=10)
+        
+        # Concurrent downloads slider
+        Label(
+            self.window, text=f"Concurrent Downloads ({self.config.max_concurrent_workers})",
+            fg='violet', bg='black', font=("Arial", 10)
+        ).pack(pady=10)
+        
+        self.workers_var: tk.IntVar = tk.IntVar(value=self.config.max_concurrent_workers)
+        
+        workers_slider = tk.Scale(
+            self.window, from_=1, to=10, orient=tk.HORIZONTAL,
+            variable=self.workers_var, bg='black', fg='violet',
+            highlightbackground='black', troughcolor='gray20'
+        )
+        workers_slider.pack(fill=tk.X, padx=20, pady=5)
+        
+        Label(
+            self.window, text="Higher = faster downloads, but may trigger YouTube rate limits. Recommended: 6-8",
+            fg='gray', bg='black', font=("Arial", 8)
+        ).pack(pady=2)
         Button(
             self.window, text="Save", fg="violet",
             highlightbackground="black", command=self._save_options
@@ -402,11 +458,14 @@ class OptionsWindow:
     
     def _save_options(self) -> None:
         """Save selected options."""
-        selected_indices = self.format_listbox.curselection()
-        formats = [self.format_listbox.get(i) for i in selected_indices]
+        selected_indices: tuple = self.format_listbox.curselection()
+        formats: List[str] = [self.format_listbox.get(i) for i in selected_indices]
         
         self.config.set_download_formats(formats or ['m4a'])
         self.config.set_csv_mode(self.mode_var.get())
+        self.config.quality_preset = self.quality_var.get()
+        self.config.skip_cover_art = self.skip_cover_var.get()
+        self.config.max_concurrent_workers = self.workers_var.get()
         
         self.window.destroy()
 
@@ -414,34 +473,34 @@ class OptionsWindow:
 class CustomPlaylistWindow:
     """Window for manually adding songs to a playlist."""
     
-    def __init__(self, parent: tk.Tk, config: Config):
+    def __init__(self, parent: tk.Tk, config: Config) -> None:
         """Initialize custom playlist window.
         
         Args:
             parent: Parent window.
             config: Configuration object.
         """
-        self.config = config
+        self.config: Config = config
         self.song_entries: List[Dict[str, tk.Entry]] = []
         
-        self.window = tk.Toplevel(parent)
+        self.window: tk.Toplevel = tk.Toplevel(parent)
         self.window.title("Custom Playlist")
         self.window.geometry("700x600")
         self.window.configure(bg="black")
         
         # Scrollable frame
-        main_frame = Frame(self.window)
+        main_frame: Frame = Frame(self.window)
         main_frame.pack(fill="both", expand=True)
         
-        canvas = Canvas(main_frame, bg="black", highlightthickness=0)
+        canvas: Canvas = Canvas(main_frame, bg="black", highlightthickness=0)
         canvas.pack(side="left", fill="both", expand=True)
         
-        scrollbar = Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollbar: Scrollbar = Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollbar.pack(side="right", fill="y")
         
         canvas.config(yscrollcommand=scrollbar.set)
         
-        self.inner_frame = Frame(canvas, bg="black")
+        self.inner_frame: Frame = Frame(canvas, bg="black")
         canvas.create_window((0, 0), window=self.inner_frame, anchor="nw")
         
         # Instructions
@@ -451,18 +510,18 @@ class CustomPlaylistWindow:
         ).pack(pady=10)
         
         # Headers
-        header_frame = Frame(self.inner_frame, bg="black")
+        header_frame: Frame = Frame(self.inner_frame, bg="black")
         header_frame.pack(fill="x", padx=10)
         
         for header in ["Song Name", "Artist", "Album", "Genre", "Date"]:
             Label(header_frame, text=header, fg='violet', bg='black',
                  width=12).pack(side="left", padx=5)
         
-        self.entries_frame = Frame(self.inner_frame, bg="black")
+        self.entries_frame: Frame = Frame(self.inner_frame, bg="black")
         self.entries_frame.pack(fill="both", expand=True, padx=10)
         
         # Buttons
-        button_frame = Frame(self.inner_frame, bg="black")
+        button_frame: Frame = Frame(self.inner_frame, bg="black")
         button_frame.pack(pady=10)
         
         Button(button_frame, text="Add Row", fg="violet",
@@ -475,10 +534,10 @@ class CustomPlaylistWindow:
     
     def _add_row(self) -> None:
         """Add a new song entry row."""
-        row_frame = Frame(self.entries_frame, bg="black")
+        row_frame: Frame = Frame(self.entries_frame, bg="black")
         row_frame.pack(fill="x", pady=5)
         
-        entries = {
+        entries: Dict[str, tk.Entry] = {
             'title': tk.Entry(row_frame, width=12),
             'artist': tk.Entry(row_frame, width=12),
             'album': tk.Entry(row_frame, width=12),
@@ -494,21 +553,21 @@ class CustomPlaylistWindow:
     def _save_playlist(self) -> None:
         """Save playlist to CSV file."""
         try:
-            csv_path = self.config.input_path
+            csv_path: Path = self.config.input_path
             
             with open(csv_path, 'w', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 writer.writerow([str(i) for i in range(24)])
                 
                 for entry_dict in self.song_entries:
-                    title = entry_dict['title'].get().strip()
-                    artist = entry_dict['artist'].get().strip()
-                    album = entry_dict['album'].get().strip()
-                    genre = entry_dict['genre'].get().strip()
-                    date = entry_dict['date'].get().strip()
+                    title: str = entry_dict['title'].get().strip()
+                    artist: str = entry_dict['artist'].get().strip()
+                    album: str = entry_dict['album'].get().strip()
+                    genre: str = entry_dict['genre'].get().strip()
+                    date: str = entry_dict['date'].get().strip()
                     
                     if title and artist:  # Only save if title and artist present
-                        row = [''] * 24
+                        row: List[str] = [''] * 24
                         row[1] = title
                         row[3] = artist
                         row[2] = album

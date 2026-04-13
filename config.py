@@ -9,15 +9,19 @@ from typing import List
 class Config:
     """Centralized configuration management."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize configuration with default values."""
-        self.app_path = Path(__file__).parent
-        self.output_path = Path(user_music_dir())
-        self.input_path = self.app_path / "custom.csv"
-        self.csv_mode = "exportify"  # "exportify" or "tune_my_music"
+        self.app_path: Path = Path(__file__).parent
+        self.output_path: Path = Path(user_music_dir())
+        self.input_path: Path = self.app_path / "custom.csv"
+        self.csv_mode: str = "exportify"  # "exportify", "tune_my_music", or "native"
         self.download_formats: List[str] = ["m4a"]
-        self.max_retries = 3
-        self.retry_delay = 2  # seconds
+        self.max_retries: int = 3
+        self.retry_delay: int = 2  # seconds
+        self.quality_preset: str = "high"  # "maximum", "high", "medium", or "fast"
+        self.skip_cover_art: bool = False  # Skip cover art embedding for faster processing
+        self.max_concurrent_workers: int = 6  # Downloads: More threads = faster, but may hit YouTube rate limits
+        self.max_format_conversion_workers: int = 3  # Format conversions
         
     def set_output_path(self, path: str) -> None:
         """Set custom output path."""
@@ -34,8 +38,8 @@ class Config:
         self.download_formats = formats if formats else ["m4a"]
         
     def set_csv_mode(self, mode: str) -> None:
-        """Set CSV reading mode (exportify or tune_my_music)."""
-        if mode in ("exportify", "tune_my_music"):
+        """Set CSV reading mode (exportify, tune_my_music, or native)."""
+        if mode in ("exportify", "tune_my_music", "native"):
             self.csv_mode = mode
             
     def ensure_output_path_exists(self) -> None:

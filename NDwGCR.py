@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def main():
     """Entry point for the application."""
     root = tk.Tk()
-    app = NDwGCRUI(root)
+    app = NDwGCRUI(root) # type: ignore
     root.mainloop()
 
 

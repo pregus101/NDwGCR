@@ -226,38 +226,47 @@ class NDwGCRUI:
             self.download_start_time = time.time()
             
             def progress_callback(current: int, total: int, song_info: Dict[str, str]) -> None:
-                self.progress_bar['value'] = current
                 song_name: str = song_info.get('title', 'Unknown')
                 artist_name: str = song_info.get('artist', 'Unknown')
-                self._log_info(
-                    f"Downloading: {song_name} by {artist_name} ({current}/{total})"
-                )
-                
-                # Calculate time estimate
+                message: str = f"Downloading: {song_name} by {artist_name} ({current}/{total})"
+                logger.info(message)
+
+                # Capture time estimate values before scheduling (avoid closure over mutable state)
+                time_estimate_text: str = ""
                 if self.download_start_time and current > 0:
                     elapsed_seconds: float = time.time() - self.download_start_time
                     avg_time_per_item: float = elapsed_seconds / current
-                    remaining_items: int = total - current
-                    estimated_remaining_seconds: float = avg_time_per_item * remaining_items
-                    
-                    time_estimate_text: str = self._format_time_estimate(
+                    estimated_remaining_seconds: float = avg_time_per_item * (total - current)
+                    time_estimate_text = self._format_time_estimate(
                         estimated_remaining_seconds, current, total
                     )
-                    self.time_estimate_label.config(text=time_estimate_text)
-                
-                self.root.update()
-            
+
+                # Schedule all widget updates on the main thread — Tkinter is not thread-safe
+                def _update(msg=message, est=time_estimate_text, val=current):
+                    self.progress_bar['value'] = val
+                    self.text_output.insert(tk.END, msg + "\n")
+                    self.text_output.see(tk.END)
+                    if est:
+                        self.time_estimate_label.config(text=est)
+                self.root.after(0, _update)
+
             def error_callback(error_msg: str) -> None:
-                self._log_error(error_msg)
-            
+                logger.error(error_msg)
+                self.root.after(0, lambda msg=error_msg: (
+                    self.text_output.insert(tk.END, f"[ERROR]: {msg}\n"),
+                    self.text_output.see(tk.END)
+                ))
+
             self.downloader.download_playlist(
                 songs,
                 on_progress=progress_callback,
                 on_error=error_callback
             )
-            
-            self._log_info("Download complete!")
-            self.time_estimate_label.config(text="")
+
+            self.root.after(0, lambda: (
+                self._log_info("Download complete!"),
+                self.time_estimate_label.config(text="")
+            ))
             
         except Exception as e:
             self._log_error(f"Download failed: {e}")

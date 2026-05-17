@@ -224,11 +224,15 @@ class AudioConverter:
                 logger.warning(f"Could not delete existing file {output_path}: {e}")
                 return False
         
-        # Build FFmpeg command
+        # Build FFmpeg command (-y = overwrite output without prompting, needed for concurrent conversions)
         command = [
             part.format(input=str(input_path), output=str(output_path))
             for part in FFMPEG_COMMANDS[output_format][quality]
         ]
+        command.insert(1, '-y')
+        # -vn drops attached-picture/video streams from the input so they don't
+        # confuse the muxer when converting to audio-only containers (flac, mp3, etc.)
+        command.insert(2, '-vn')
         
         try:
             result = subprocess.run(command, check=False, capture_output=True, text=True)
